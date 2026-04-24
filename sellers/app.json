@@ -4,7 +4,7 @@
         "slug": "sellers",
         "version": "1.0.0",
         "orientation": "portrait",
-        "icon": "./assets/images/Logomark.svg",
+        "icon": "./assets/images/Logomark.png",
         "scheme": "sellers",
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
@@ -19,7 +19,7 @@
                 "monochromeImage": "./assets/images/android-icon-monochrome.png"
             },
             "edgeToEdgeEnabled": true,
-            "softwareKeyboardLayoutMode": "adjustPan",
+            "softwareKeyboardLayoutMode": "pan",
             "predictiveBackGestureEnabled": false
         },
         "web": {

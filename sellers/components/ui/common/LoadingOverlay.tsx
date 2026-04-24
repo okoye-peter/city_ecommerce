@@ -57,7 +57,7 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ isVisible }) => {
             {/* The Pulsing Logo */}
             <Animated.View style={[styles.logoContainer, animatedScale]}>
                 <Image
-                    source={require('../../../assets/images/Logomark.svg')}
+                    source={require('../../../assets/images/Logomark.png')}
                     style={styles.logo}
                     contentFit="contain"
                     transition={300}

@@ -38,7 +38,7 @@ const CustomSplash = () => {
             <Animated.View style={logoStyle} className="items-center justify-center">
                 <View className="w-fit bg-white items-center justify-center">
                     <Image
-                        source={require("../../../assets/images/Logomark.svg")}
+                        source={require("../../../assets/images/Logomark.png")}
                         style={{ width: 50, height: 50 }}
                         contentFit="contain"
                     />
