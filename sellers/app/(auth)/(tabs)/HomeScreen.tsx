@@ -23,7 +23,7 @@ const HomeScreen = () => {
     return (
         <>
             <SafeAreaView className='flex-1 bg-white'>
-                <ScrollView className='pt-4 flex-1'>
+                <ScrollView className='pt-4 flex-1' showsVerticalScrollIndicator={false}>
                     <View className={` px-4 pb-2 ${tab === 'online' ? 'border-b-4 border-muted-neutral/60' : ''}`}>
                         <View className='mb-8'>
                             <Text className={`${Platform.OS === 'ios' ? 'text-2xl' : 'text-3xl'} font-bold text-body mb-2`}>
@@ -60,8 +60,7 @@ const HomeScreen = () => {
 
                     {/* Online Content */}
                     {tab === 'online' && (
-
-                            <Online />
+                        <Online />
                     )}
 
                     {/* Offline Content */}
@@ -70,7 +69,6 @@ const HomeScreen = () => {
                             <Offline goOnlineHandler={() => setShowGoOnlineConfirmationModal(true)} />
                         </View>
                     )}
-
                 </ScrollView>
             </SafeAreaView>
 

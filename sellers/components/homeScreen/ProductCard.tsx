@@ -2,6 +2,9 @@ import { View, Text, Platform } from 'react-native'
 import React from 'react'
 import { Image } from 'expo-image';
 import { format } from 'date-fns';
+import { formatPrice } from '@/utils/priceFormatter';
+import { StatusType } from '@/utils/statusClass';
+import StatusCard from '../ui/common/StatusCard';
 
 interface Props {
     productImageUrl?: string;
@@ -9,27 +12,32 @@ interface Props {
     orderTotal: number;
     orderRef: string;
     date: string;
-    status: string;
+    status: StatusType;
+    className?: string;
 }
 
-const ProductCard = ({productImageUrl, productName, orderTotal, orderRef, date}: Props) => {
+const ProductCard = ({productImageUrl, productName, orderTotal, orderRef, date, status, className}: Props) => {
     return (
-        <View className='w-full flex-row gap-2 items-center'>
-            <View className='w-[45px] h-[450px] rounded-lg overflow-hidden'>
+        <View className={`w-full flex-row gap-2 items-center py-4 ${className}`}>
+            <View className='w-[88px] h-[88px] rounded-lg overflow-hidden'>
                 {productImageUrl && (
                     <Image
                         source={{ uri: productImageUrl }}
                         style={{ width: '100%', height: '100%' }}
-                        contentFit='contain'
+                        contentFit='cover'
                         transition={200}
                     />
                 )}
             </View>
             <View className='flex-1'>
-                <Text className={`font-medium font-Inter text-primary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>{productName}</Text>
-                <View className='flex-row items-center gap-1'>
-                    <Text className={`font-medium font-Inter text-primary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>{orderRef}</Text>
-                    <Text className={`font-medium font-Inter text-primary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>{format(date, 'dd/MM/YYYY')}</Text>
+                <Text numberOfLines={1} className={`font-normal font-Inter text-primary ${Platform.OS === 'ios' ? 'text-lg' : 'text-xl'}`}>{productName}</Text>
+                <View className='flex-row items-center gap-1 mb-2'>
+                    <Text numberOfLines={1} className={`font-normal font-Inter pr-1.5 border-r border-r-border/60 text-secondary ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>Order-{orderRef}</Text>
+                    <Text numberOfLines={1} className={`font-normal font-Inter pl-1.5 text-secondary ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>{format(date, 'do MMM, yyyy')}</Text>
+                </View>
+                <View className='flex-row items-center justify-between'>
+                    <Text className={`font-normal font-Inter text-body ${Platform.OS === 'ios' ? 'text-lg' : 'text-xl'}`}>{formatPrice(orderTotal)}</Text>
+                    <StatusCard status={status} />
                 </View>
             </View>
         </View>
