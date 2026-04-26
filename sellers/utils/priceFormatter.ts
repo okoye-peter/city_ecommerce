@@ -73,11 +73,34 @@ export const formatPrice = (
 };
 
 /**
- * Formats a large number into a compact form (e.g., 1K, 1M).
+ * Formats a large number into a compact form (e.g., 1.5k, 100.12k, 1.2m).
+ * Supports up to 2 decimal places and removes unnecessary trailing zeros.
  */
-export const formatCompactNumber = (number: number, locale: string = 'en-NG'): string => {
-  return new Intl.NumberFormat(locale, {
-    notation: 'compact',
-    compactDisplay: 'short',
-  }).format(number);
+export const formatCompactNumber = (number: number): string => {
+  if (number === 0 || !number) return '0';
+
+  const absNumber = Math.abs(number);
+  const sign = number < 0 ? '-' : '';
+
+  if (absNumber < 1000) {
+    return `${sign}${absNumber}`;
+  }
+
+  const units = [
+    { value: 1e12, symbol: 't' },
+    { value: 1e9, symbol: 'b' },
+    { value: 1e6, symbol: 'm' },
+    { value: 1e3, symbol: 'k' },
+  ];
+
+  for (const { value, symbol } of units) {
+    if (absNumber >= value) {
+      const formatted = (absNumber / value).toFixed(2);
+      // parseFloat + toString removes unnecessary trailing zeros (e.g., 1.50 -> 1.5)
+      const trimmed = parseFloat(formatted).toString();
+      return `${sign}${trimmed}${symbol}`;
+    }
+  }
+
+  return `${sign}${absNumber}`;
 };

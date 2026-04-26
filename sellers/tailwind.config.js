@@ -34,6 +34,8 @@ module.exports = {
         "success-light": "#D1FADF",
         "success-light-2": "#ECFDF3",
         "success-dark": "#039855",
+        "reject": "#E3E3E3",
+        "star": "#E8B931",
       }
     },
   },

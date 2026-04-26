@@ -3,8 +3,7 @@ import {
     Text,
     View,
     Platform,
-    Pressable,
-    TouchableOpacity,
+    Pressable
 } from 'react-native';
 import {
     BottomSheetModal,
@@ -17,6 +16,7 @@ import BottomSheetDropdown from '../ui/common/BottomSheetDropdown';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import CustomButton from '../ui/common/CustomButton';
 
 interface Product {
     name: string;
@@ -108,24 +108,33 @@ const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduc
         <CustomBottomSheet
             ref={localRef}
             snapPoints={snapPoints}
-
+            handleComponent={null}
+            index={1}
+            backgroundStyle={{ borderRadius: 24 }}
         >
             <View className="flex-1 relative">
+                <Pressable 
+                    onPress={() => localRef.current?.dismiss()} 
+                    className="absolute right-4 top-4 z-50 border bg-light border-border rounded-full p-2 "
+                    style={{ elevation: 5 }}
+                >
+                    <AntDesign name="close" size={14} color="black" />
+                </Pressable>
                 <BottomSheetScrollView
                     contentContainerStyle={{ paddingBottom: 24 }}
                     showsVerticalScrollIndicator={false}
                 >
                     {/* Image Area placeholder */}
-                    <Pressable onPress={handleImageSelector} className="mb-5 h-52 w-full bg-light items-center justify-center gap-2 relative">
+                    <Pressable onPress={handleImageSelector} className="h-[250px] w-full bg-light items-center justify-center gap-2 relative rounded-t-[24px] overflow-hidden">
                         {
                             image ?
                                 <>
                                     <Image source={{ uri: image }} style={{ width: '100%', height: '100%' }} />
-                                    <View className='absolute inset-0 items-center justify-center'>
-                                        <View className='bg-white/60 rounded-full p-2'>
+                                    <Pressable className='absolute inset-0 items-center justify-center' onPress={() => setImage(null)}>
+                                        <View className='bg-light rounded-full p-2'>
                                             <AntDesign name="close" size={16} color="var(--color-body)" />
                                         </View>
-                                    </View>
+                                    </Pressable>
                                 </>
                                 :
                                 <>
@@ -139,7 +148,7 @@ const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduc
                     </Pressable>
 
                     {/* Form Fields */}
-                    <View className="px-4 gap-0.5">
+                    <View className="px-4 mt-5 gap-0.5">
                         <CustomInput
                             label="Name"
                             placeholder="Product name"
@@ -183,18 +192,14 @@ const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduc
                 {/* Sticky footer for Add Product action */}
                 <View
                     style={{ paddingBottom: Platform.OS === 'ios' ? 36 : 24 }}
-                    className="px-4 pt-3 bg-white border-t border-[#F0F0F0]"
+                    className="px-4 bg-white"
                 >
-                    <TouchableOpacity
-                        onPress={isFormValid ? handleAddProduct : undefined}
-                        activeOpacity={isFormValid ? 0.85 : 1}
-                        className={`w-full py-4 rounded-full items-center justify-center ${isFormValid ? 'bg-[#1E1E1E]' : 'bg-[#BFBFBF]'
-                            }`}
-                    >
-                        <Text className="text-white text-base font-semibold">
-                            Add Product
-                        </Text>
-                    </TouchableOpacity>
+                    <CustomButton
+                        onPressHandler={() => isFormValid ? handleAddProduct() : undefined}
+                        disabled={!isFormValid}
+                        buttonText='Add Product'
+                        
+                    />
                 </View>
             </View>
         </CustomBottomSheet>

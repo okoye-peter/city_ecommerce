@@ -64,6 +64,7 @@ export default function RootLayout() {
                     <View style={{ flex: 1 }}>
                         <Stack screenOptions={{ headerShown: false }} />
 
+
                         {showCustomSplash && (
                             <Animated.View
                                 exiting={FadeOut.duration(800)}
@@ -83,5 +84,6 @@ export default function RootLayout() {
                 </SafeAreaProvider>
             </BottomSheetModalProvider>
         </GestureHandlerRootView>
+
     );
 }

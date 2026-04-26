@@ -25,6 +25,8 @@
     --color-success-light-2: #ECFDF3;
     --color-success-dark: #039855;
 
+    --color-reject: #E3E3E3;
+
     --color-warning-light: #FEF0C7;
     --color-warning-light-2: #FFFAEB;
     --color-warning-dark: #DC6803;
@@ -36,6 +38,7 @@
     --color-indigo-light: #E0E0FF;
     --color-indigo-light-2: #F5F5FF;
     --color-indigo-dark: #4338CA;
+    --color-star: #E8B931;
 
 
     --font-inter: Inter_400Regular;

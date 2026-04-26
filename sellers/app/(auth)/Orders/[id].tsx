@@ -6,6 +6,8 @@ import SafeAreaView from '@/components/ui/common/NativeStyledSafeAreaView';
 import StatusCard from '@/components/ui/common/StatusCard';
 import OrderStatusTracker from '@/components/ui/common/OrderStatusTracker';
 import ProductCard from '@/components/Orders/ProductCard';
+import CustomButton from '@/components/ui/common/CustomButton';
+import { formatPrice } from '@/utils/priceFormatter';
 
 
 const ViewOrderDetails = () => {
@@ -14,7 +16,7 @@ const ViewOrderDetails = () => {
     console.log(id)
 
   return (
-    <SafeAreaView className='flex-1'>
+    <SafeAreaView className='flex-1 pb-3'>
 
         <ScrollView className='flex-1' showsVerticalScrollIndicator={false}>
             {/* Header */}
@@ -68,6 +70,20 @@ const ViewOrderDetails = () => {
                         <ProductCard />
                     </View>
                 </View>
+            </View>
+
+            {/* Summary total */}
+            <View className='px-4 py-2 flex flex-row items-center justify-between'>
+               <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal text-primary font-Inter`}>Total</Text>
+               <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal text-primary font-Inter`}>{formatPrice(23900)}</Text>
+            </View>
+
+            {/* marked as picked up */}
+            <View className='px-4 py-2 mt-2'>
+                <CustomButton 
+                    buttonText='Marked as Picked Up'
+                    onPressHandler={() => {}}
+                />
             </View>
         </ScrollView>
     </SafeAreaView>

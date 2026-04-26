@@ -7,6 +7,7 @@ import Offline from '@/components/homeScreen/Offline';
 import AppModal from '@/components/ui/common/AppModal';
 import CustomButton from '@/components/ui/common/CustomButton';
 import Online from '@/components/homeScreen/Online';
+import PendingOrderBottomSheet from '@/components/ui/common/PendingOrderBottomSheet';
 
 const user = 'Tunde';
 
@@ -129,6 +130,8 @@ const HomeScreen = () => {
                     
                 </View>
             </AppModal>
+
+            <PendingOrderBottomSheet />
         </>
     )
 }

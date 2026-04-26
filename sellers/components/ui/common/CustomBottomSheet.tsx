@@ -26,9 +26,11 @@ const CustomBottomSheet = forwardRef<BottomSheetModal, CustomBottomSheetProps>((
     );
 
     return (
+
         <BottomSheetModal
             ref={ref}
             index={0}
+            enableDynamicSizing={false}
             backdropComponent={renderBackdrop}
             handleIndicatorStyle={styles.handleIndicator}
             keyboardBehavior="extend"
@@ -36,7 +38,9 @@ const CustomBottomSheet = forwardRef<BottomSheetModal, CustomBottomSheetProps>((
             android_keyboardInputMode="adjustResize"
             {...rest}
         >
-            {children}
+            <BottomSheetView style={styles.sheetContent}>
+                {children}
+            </BottomSheetView>
         </BottomSheetModal>
     );
 });

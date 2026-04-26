@@ -13,7 +13,7 @@ const _layout = () => {
                 headerShown: false,
                 tabBarActiveTintColor: '#1E1E1E',
                 tabBarInactiveTintColor: '#757575',
-                tabBarLabelStyle: { marginTop: 4 },
+                tabBarLabelStyle: { marginTop: 3 },
             }}
         >
             <Tabs.Screen
