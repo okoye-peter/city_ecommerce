@@ -13,6 +13,7 @@ interface Props {
     keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
     prefix?: React.ReactNode;
     isBottomSheet?: boolean;
+    classStyle?: string
 }
 
 const CustomInput = ({
@@ -24,7 +25,9 @@ const CustomInput = ({
     numberOfLines = 1,
     keyboardType = 'default',
     prefix,
-    isBottomSheet = false
+    isBottomSheet = false,
+    classStyle,
+
 }: Props) => {
     const [isFocused, setIsFocused] = useState(false);
 
@@ -47,7 +50,7 @@ const CustomInput = ({
             )}
 
             <Animated.View
-                className={`w-full flex-row rounded-xl items-center border px-3 ${numberOfLines > 1 ? 'items-start pt-2' : 'h-[50px] items-center'}`}
+                className={`w-full flex-row rounded-xl items-center border px-3 ${numberOfLines > 1 ? 'items-start pt-1' : 'h-[44px] items-center'} ${classStyle}`}
                 style={animatedBorderStyle}
             >
                 {prefix && (
@@ -55,7 +58,11 @@ const CustomInput = ({
                         {typeof prefix === 'string' ? (
                             <Text
                                 className={`font-inter text-body ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}
-                                style={{ includeFontPadding: false }}
+                                style={{ 
+                                    includeFontPadding: false,
+                                    textAlignVertical: 'center',
+                                    verticalAlign: 'middle'
+                                }}
                             >
                                 {prefix}
                             </Text>
@@ -64,36 +71,40 @@ const CustomInput = ({
                         )}
                     </View>
                 )}
-                <InputComponent
-                    className={`flex-1 font-inter ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-body p-0`}
-                    value={value}
-                    onChangeText={setValue}
-                    placeholder={placeholder}
-                    placeholderTextColor="#A9A9A9"
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    secureTextEntry={secureTextEntry}
-                    keyboardType={keyboardType}
-                    autoCapitalize="none"
-                    multiline={numberOfLines > 1}
-                    numberOfLines={numberOfLines}
-                    style={[
-                        { textAlignVertical: numberOfLines > 1 ? 'top' : 'center' },
-                        numberOfLines > 1 ? {
-                            height: Math.max(48, numberOfLines * 24),
-                            paddingTop: Platform.OS === 'ios' ? 10 : 8,
-                        } : {
-                            height: Platform.OS === 'android' ? 50 : undefined, // ← remove '100%'
-                            textAlignVertical: 'center',
-                            paddingTop: 0,
-                            paddingBottom: 0,
-                            ...(Platform.OS === 'ios' && {
-                                minHeight: 50,          // ← match container height
-                                lineHeight: undefined,  // ← let RN handle it naturally
-                            }),
-                        }
-                    ]}
-                />
+                <View className="flex-1 justify-center">
+                    <InputComponent
+                        className={`font-inter ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-body p-0`}
+                        value={value}
+                        onChangeText={setValue}
+                        placeholder={placeholder}
+                        placeholderTextColor="#A9A9A9"
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setIsFocused(false)}
+                        secureTextEntry={secureTextEntry}
+                        keyboardType={keyboardType}
+                        autoCapitalize="none"
+                        multiline={numberOfLines > 1}
+                        numberOfLines={numberOfLines}
+                        style={[
+                            { textAlignVertical: numberOfLines > 1 ? 'top' : 'center' },
+                            numberOfLines > 1 ? {
+                                height: Math.max(40, numberOfLines * 20),
+                                paddingTop: Platform.OS === 'ios' ? 5 : 4,
+                            } : {
+                                paddingTop: 0,
+                                paddingBottom: 0,
+                                paddingVertical: 0,
+                                ...(Platform.OS === 'android' && {
+                                    includeFontPadding: false,
+                                    textAlignVertical: 'center', // Keep this for Android internal text centering
+                                }),
+                                ...(Platform.OS === 'ios' && {
+                                    lineHeight: undefined,
+                                }),
+                            }
+                        ]}
+                    />
+                </View>
             </Animated.View>
         </View>
     )

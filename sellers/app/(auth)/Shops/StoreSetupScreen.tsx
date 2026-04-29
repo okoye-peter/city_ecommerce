@@ -17,7 +17,7 @@ const ProfileCreationScreen = () => {
         if (step < 3) {
             setStep((prev) => prev + 1)
         } else {
-            router.replace('/(auth)/StoreSetup/StoreSetupSuccessScreen')
+            router.replace('/(auth)/Shops/StoreSetupSuccessScreen')
         }
     }
 

@@ -1,5 +1,5 @@
 import { View, Text, Platform, Pressable, FlatList } from 'react-native'
-import React from 'react'
+import { useState } from 'react'
 import SafeAreaView from '@/components/ui/common/NativeStyledSafeAreaView'
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import Feather from '@expo/vector-icons/Feather';
@@ -7,6 +7,8 @@ import Entypo from '@expo/vector-icons/Entypo';
 import { formatCompactNumber } from '@/utils/priceFormatter';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import ProductCard from '@/components/Shop/ProductCard';
+import EditProductBottomSheet from '@/components/Shop/EditOrAddProductBottomSheet';
+import { Link, useRouter } from 'expo-router';
 
 const rating = 4.8;
 const orderCount = 124234;
@@ -151,6 +153,9 @@ const Products: Product[] = [
 
 
 const ShopScreen = () => {
+    const router = useRouter();
+
+    const [isAddBottomSheetOpen, setIsAddBottomSheetOpen] = useState(false);
 
     return (
         <SafeAreaView className='flex-1 bg-white'>
@@ -167,30 +172,32 @@ const ShopScreen = () => {
                                         <EvilIcons name="search" size={24} color="#757575" />
                                     </Pressable>
                                     {/* edit shop detail */}
-                                    <Pressable className='p-2'>
+                                    <Pressable className='p-2' onPress={() => router.push('/(auth)/Shops/EditStoreDetailsScreen')} >
                                         <Feather name="edit-3" size={17} color="#757575" />
                                     </Pressable>
                                 </View>
                             </View>
 
-                            <View className='flex-row items-center gap-x-1.5 px-4 mb-3'>
-                                <View className='flex-row items-baseline gap-1'>
-                                    <Entypo name="star" size={17} color={rating > 0 ? `#E8B931` : `#F5F5F5`} />
-                                    <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-secondary font-normal font-Inter`}>{rating}</Text>
-                                </View>
+                            <Link href="/(auth)/Shops/ViewStoreDetailsScreen" asChild>
+                                <Pressable className='flex-row items-center gap-x-1.5 px-4 mb-3 w-full'>
+                                    <View className='flex-row items-baseline gap-1'>
+                                        <Entypo name="star" size={17} color={rating > 0 ? `#E8B931` : `#F5F5F5`} />
+                                        <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-secondary font-normal font-Inter`}>{rating}</Text>
+                                    </View>
 
-                                <View className='h-3.5 w-[1px] bg-border' />
+                                    <View className='h-3.5 w-[1px] bg-border' />
 
-                                <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-secondary font-normal font-Inter`}>{formatCompactNumber(orderCount)} Orders</Text>
+                                    <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-secondary font-normal font-Inter`}>{formatCompactNumber(orderCount)} Orders</Text>
 
-                                <View className='h-3.5 w-[1px] bg-border' />
+                                    <View className='h-3.5 w-[1px] bg-border' />
 
-                                {/* view shop details */}
-                                <Pressable className={`flex-row items-center`}>
-                                    <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-secondary font-normal font-Inter`}>Open until 5:30 pm</Text>
-                                    <Feather name="chevron-right" size={17} color="#757575" />
+                                    {/* view shop details */}
+                                    <View className={`flex-row items-center`}>
+                                        <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-secondary font-normal font-Inter`}>Open until 5:30 pm</Text>
+                                        <Feather name="chevron-right" size={17} color="#757575" />
+                                    </View>
                                 </Pressable>
-                            </View>
+                            </Link>
 
                             {/* shop categories  */}
                             <View className='flex-row gap-2 px-4'>
@@ -203,7 +210,10 @@ const ShopScreen = () => {
                         <View className='flex-row items-center justify-between h-12 px-4 mt-2'>
                             <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-primary font-normal font-Inter`}>Products ({Products.length})</Text>
                             {/* add products to shop */}
-                            <Pressable className='flex-row gap-2 items-center bg-primary px-4 py-2 rounded-full'>
+                            <Pressable
+                                onPress={() => setIsAddBottomSheetOpen(true)}
+                                className='flex-row gap-2 items-center bg-primary px-4 py-2 rounded-full'
+                            >
                                 <AntDesign name="plus" size={14} color="white" />
                                 <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-white font-normal font-Inter`}>Add</Text>
                             </Pressable>
@@ -226,6 +236,11 @@ const ShopScreen = () => {
                 contentContainerStyle={{ paddingBottom: 100 }}
                 className='flex-1'
             />
+            {isAddBottomSheetOpen && (
+                <EditProductBottomSheet
+                    onClose={() => setIsAddBottomSheetOpen(false)}
+                />
+            )}
         </SafeAreaView>
     )
 }

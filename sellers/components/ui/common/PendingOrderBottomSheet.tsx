@@ -70,8 +70,9 @@ const PendingOrderBottomSheet = () => {
                 enablePanDownToClose={true}
                 handleComponent={null}
                 index={1}
+                backgroundStyle={{ borderRadius: 24 }}
             >
-                <View className='flex-1 px-4 pt-4'>
+                <View className='flex-1 overflow-hidden rounded-t-3xl px-4 pt-4'>
                     {/* Header */}
                     <View className='flex-row justify-between items-center mb-3'>
                         <Text className={`font-inter-semibold ${Platform.OS === 'ios' ? 'text-xl' : 'text-2xl'} text-body`}>

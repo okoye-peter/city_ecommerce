@@ -65,7 +65,13 @@ const VerifyIdentity = () => {
                     </View>
 
                     <View className=''>
-                        <CustomInput label="ID Number" value={idNumber} setValue={setIdNumber} placeholder='Enter ID Number' keyboardType='numeric' />
+                        <CustomInput 
+                            label="ID Number" 
+                            value={idNumber} 
+                            setValue={setIdNumber} 
+                            placeholder='Enter ID Number' 
+                            keyboardType='numeric' 
+                            />
                     </View>
 
                     <View className='flex-row items-start w-full p-3 bg-light rounded-lg gap-x-3'>

@@ -164,11 +164,16 @@ const Shop = () => {
                     <View>
                         <Text className={`font-normal font-Inter ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>Categories (Select up to 3)</Text>
 
-                        <View className='flex-1 flex-row gap-3 flex-wrap w-full pb-4'>
+                        <View className='flex-row gap-3 flex-wrap w-full pb-4 mt-3'>
                             {
                                 categories.map((cat) => (
                                     <Pressable key={cat.id} onPress={() => handleSelectCategories(cat.id)}>
-                                        <Text className={`px-3 py-1.5 rounded-lg ${Platform.OS === 'ios' ? 'text-xs' : 'text-sm'} ${selectedCategories.includes(cat.id) ? 'text-white bg-primary' : 'text-secondary bg-light'}`}>{cat.label}</Text>
+                                        <Text 
+                                            className={`px-3 py-1.5 rounded-lg ${Platform.OS === 'ios' ? 'text-xs' : 'text-sm'} ${selectedCategories.includes(cat.id) ? 'text-white bg-primary' : 'text-secondary bg-light'}`}
+                                            style={{ includeFontPadding: false }}
+                                        >
+                                            {cat.label}
+                                        </Text>
                                     </Pressable>
                                 ))
                             }

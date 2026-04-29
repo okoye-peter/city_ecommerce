@@ -35,7 +35,7 @@ const IdentityVerificationSuccess = () => {
                 <View className=''>
                     <CustomButton
                         buttonText='Continue'
-                        onPressHandler={() => router.replace('/(auth)/StoreSetup/StoreSetupScreen')}
+                        onPressHandler={() => router.replace('/(auth)/Shops/StoreSetupScreen')}
                         classStyle={`w-full py-5 ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}
                     />
                 </View>
