@@ -13,7 +13,8 @@ interface Props {
     keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
     prefix?: React.ReactNode;
     isBottomSheet?: boolean;
-    classStyle?: string
+    classStyle?: string;
+    onFocus?: () => void;
 }
 
 const CustomInput = ({
@@ -27,7 +28,7 @@ const CustomInput = ({
     prefix,
     isBottomSheet = false,
     classStyle,
-
+    onFocus,
 }: Props) => {
     const [isFocused, setIsFocused] = useState(false);
 
@@ -78,7 +79,10 @@ const CustomInput = ({
                         onChangeText={setValue}
                         placeholder={placeholder}
                         placeholderTextColor="#A9A9A9"
-                        onFocus={() => setIsFocused(true)}
+                        onFocus={() => {
+                            setIsFocused(true);
+                            if (onFocus) onFocus();
+                        }}
                         onBlur={() => setIsFocused(false)}
                         secureTextEntry={secureTextEntry}
                         keyboardType={keyboardType}

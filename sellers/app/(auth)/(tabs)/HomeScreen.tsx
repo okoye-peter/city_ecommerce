@@ -25,7 +25,7 @@ const HomeScreen = () => {
         <>
             <SafeAreaView className='flex-1 bg-white'>
                 <ScrollView className='pt-4 flex-1' showsVerticalScrollIndicator={false}>
-                    <View className={` px-4 pb-2 ${tab === 'online' ? 'border-b-4 border-muted-neutral/60' : ''}`}>
+                    <View className={` px-6 pb-2 ${tab === 'online' ? 'border-b-4 border-muted-neutral/60' : ''}`}>
                         <View className='mb-8'>
                             <Text className={`${Platform.OS === 'ios' ? 'text-2xl' : 'text-3xl'} font-bold text-body mb-2`}>
                                 Good Morning, {user}

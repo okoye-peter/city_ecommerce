@@ -35,28 +35,27 @@ const PendingOrderBottomSheet = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    // Countdown and Progress Logic
+    // Countdown Logic
     useEffect(() => {
         if (timeLeft <= 0) {
-            setTimeLeft(90);
             bottomSheetRef.current?.dismiss();
             return;
         }
 
         const interval = setInterval(() => {
-            setTimeLeft((prev) => {
-                const nextValue = prev - 1;
-                // Sync progress animation with the countdown
-                progress.value = withTiming(nextValue / 90, { 
-                    duration: 1000, 
-                    easing: Easing.linear 
-                });
-                return nextValue;
-            });
+            setTimeLeft((prev) => prev - 1);
         }, 1000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [timeLeft]);
+
+    // Progress Animation Logic
+    useEffect(() => {
+        progress.value = withTiming(timeLeft / 90, { 
+            duration: 1000, 
+            easing: Easing.linear 
+        });
+    }, [timeLeft]);
 
     const animatedProps = useAnimatedProps(() => ({
         strokeDashoffset: circumference * (1 - progress.value),

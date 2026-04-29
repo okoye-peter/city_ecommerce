@@ -1,4 +1,4 @@
-import { View, Text, Platform, Pressable, FlatList } from 'react-native'
+import { View, Text, Platform, Pressable, FlatList, TextInput } from 'react-native'
 import { useState } from 'react'
 import SafeAreaView from '@/components/ui/common/NativeStyledSafeAreaView'
 import EvilIcons from '@expo/vector-icons/EvilIcons';
@@ -156,25 +156,68 @@ const ShopScreen = () => {
     const router = useRouter();
 
     const [isAddBottomSheetOpen, setIsAddBottomSheetOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+
+    const filteredProducts = Products.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <SafeAreaView className='flex-1 bg-white'>
             <FlatList
-                data={Products}
+                data={filteredProducts}
                 ListHeaderComponent={() => (
                     <View>
                         <View className='border-b-4 border-border/60 pb-3'>
                             <View className='flex-row justify-between gap-4 items-center mb-3 px-6 '>
-                                <Text className={`font-normal font-Inter text-primary flex-1 ${Platform.OS === 'ios' ? 'text-xl' : 'text-2xl'}`}>My Shop</Text>
+                                {isSearching ? (
+                                    <View className='flex-1 flex-row items-center bg-gray-100 rounded-full px-4 h-10'>
+                                        <View style={{ marginTop: Platform.OS === 'ios' ? 2 : 0 }}>
+                                            <Feather name="search" size={18} color="#757575" />
+                                        </View>
+                                        <TextInput
+                                            autoFocus
+                                            className='flex-1 ml-2 font-Inter text-primary text-base p-0'
+                                            placeholder='Search products...'
+                                            value={searchQuery}
+                                            onChangeText={setSearchQuery}
+                                            style={{ 
+                                                includeFontPadding: false, 
+                                                textAlignVertical: 'center',
+                                                height: Platform.OS === 'ios' ? 40 : 'auto'
+                                            }}
+                                        />
+                                        {searchQuery.length > 0 && (
+                                            <Pressable onPress={() => setSearchQuery('')}>
+                                                <EvilIcons name="close" size={18} color="#A9A9A9" />
+                                            </Pressable>
+                                        )}
+                                    </View>
+                                ) : (
+                                    <Text className={`font-normal font-Inter text-primary flex-1 ${Platform.OS === 'ios' ? 'text-xl' : 'text-2xl'}`}>My Shop</Text>
+                                )}
+                                
                                 <View className='flex-row gap-1 items-center'>
-                                    {/* search products in shop */}
-                                    <Pressable className='p-2'>
-                                        <EvilIcons name="search" size={24} color="#757575" />
-                                    </Pressable>
-                                    {/* edit shop detail */}
-                                    <Pressable className='p-2' onPress={() => router.push('/(auth)/Shops/EditStoreDetailsScreen')} >
-                                        <Feather name="edit-3" size={17} color="#757575" />
-                                    </Pressable>
+                                    {isSearching ? (
+                                        <Pressable className='p-2' onPress={() => {
+                                            setIsSearching(false);
+                                            setSearchQuery('');
+                                        }}>
+                                            <Text className='text-secondary font-Inter text-base'>Cancel</Text>
+                                        </Pressable>
+                                    ) : (
+                                        <>
+                                            {/* search products in shop */}
+                                            <Pressable className='p-2' onPress={() => setIsSearching(true)}>
+                                                <EvilIcons name="search" size={24} color="#757575" />
+                                            </Pressable>
+                                            {/* edit shop detail */}
+                                            <Pressable className='p-2' onPress={() => router.push('/(auth)/Shops/EditStoreDetailsScreen')} >
+                                                <Feather name="edit-3" size={17} color="#757575" />
+                                            </Pressable>
+                                        </>
+                                    )}
                                 </View>
                             </View>
 
@@ -208,7 +251,9 @@ const ShopScreen = () => {
                         </View>
 
                         <View className='flex-row items-center justify-between h-12 px-4 mt-2'>
-                            <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-primary font-normal font-Inter`}>Products ({Products.length})</Text>
+                            <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-primary font-normal font-Inter`}>
+                                {searchQuery ? `Results (${filteredProducts.length})` : `Products (${Products.length})`}
+                            </Text>
                             {/* add products to shop */}
                             <Pressable
                                 onPress={() => setIsAddBottomSheetOpen(true)}

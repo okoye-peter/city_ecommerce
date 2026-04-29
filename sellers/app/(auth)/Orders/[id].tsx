@@ -18,7 +18,7 @@ const ViewOrderDetails = () => {
   return (
     <SafeAreaView className='flex-1 pb-3'>
 
-        <ScrollView className='flex-1' showsVerticalScrollIndicator={false}>
+        <ScrollView className='flex-1 bg-white' showsVerticalScrollIndicator={false}>
             {/* Header */}
             <View className='px-4 pb-2 border-b-4 border-border/50'>
                 <View className=''>

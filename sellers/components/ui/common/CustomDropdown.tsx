@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Platform, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, Platform, useWindowDimensions, Pressable } from 'react-native';
 import { Dropdown, MultiSelect } from 'react-native-element-dropdown';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Feather from '@expo/vector-icons/Feather';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 interface Props {
@@ -37,7 +38,7 @@ const CustomDropdown = ({
     // Smooth focus animation for the border
     const animatedBorderStyle = useAnimatedStyle(() => {
         return {
-            borderColor: withTiming(isFocused ? '#2C2C2C' : '#D9D9D9', { duration: 250 }),
+            borderColor: withTiming(isFocused ? '#1E1E1E' : '#E5E7EB', { duration: 250 }),
         };
     });
 
@@ -85,9 +86,9 @@ const CustomDropdown = ({
             null
         ),
         renderRightIcon: () => (
-            <MaterialIcons
-                name={isFocused ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-                size={24}
+            <Feather
+                name={isFocused ? 'chevron-up' : 'chevron-down'}
+                size={20}
                 color="#757575"
             />
         ),
@@ -103,22 +104,46 @@ const CustomDropdown = ({
 
             <Animated.View
                 className="rounded-xl border bg-transparent"
-                style={[animatedBorderStyle, { minHeight: 44, justifyContent: 'center' }]}
+                style={[animatedBorderStyle, { minHeight: 44 }]}
             >
                 {isMulti ? (
-                    <MultiSelect
-                        {...commonProps}
-                        style={styles.dropdown}
-                        value={value}
-                        onChange={onChange}
-                        selectedStyle={styles.selectedStyle}
-                        renderSelectedItem={(item, unSelect) => (
-                            <View className="bg-light px-2.5 py-1.5 rounded-lg flex-row items-center mr-2 mt-1 border border-border/50">
-                                <Text className="font-inter text-xs font-medium text-body mr-1">{item[labelField]}</Text>
-                                <MaterialIcons name="close" size={14} color="#757575" onPress={() => unSelect && unSelect(item)} />
+                    <View>
+                        <MultiSelect
+                            {...commonProps}
+                            style={styles.dropdown}
+                            placeholder={value && value.length > 0 ? "" : placeholder}
+                            value={value}
+                            onChange={onChange}
+                            visibleSelectedItem={false}
+                        />
+                        {value && value.length > 0 && (
+                            <View className="flex-row flex-wrap px-3 pb-3 -mt-10">
+                                {value.map((val: any) => {
+                                    const item = data.find(d => d[valueField] === val);
+                                    if (!item) return null;
+                                    return (
+                                        <View 
+                                            key={val} 
+                                            className="bg-[#F3F4F6] px-3 py-1.5 rounded-xl flex-row items-center mr-2 mt-2"
+                                        >
+                                            <Text className="font-inter text-sm text-[#1E1E1E] mr-2">
+                                                {item[labelField]}
+                                            </Text>
+                                            <Pressable 
+                                                onPress={() => {
+                                                    const newValue = value.filter((v: any) => v !== val);
+                                                    onChange(newValue);
+                                                }}
+                                                hitSlop={8}
+                                            >
+                                                <Feather name="x" size={14} color="#757575" />
+                                            </Pressable>
+                                        </View>
+                                    );
+                                })}
                             </View>
                         )}
-                    />
+                    </View>
                 ) : (
                     <Dropdown
                         {...commonProps}
@@ -145,7 +170,7 @@ const styles = StyleSheet.create({
     placeholderStyle: {
         fontSize: Platform.OS === 'ios' ? 14 : 16,
         fontFamily: 'Inter',
-        color: '#A9A9A9',
+        color: '#9CA3AF',
     },
     selectedTextStyle: {
         fontSize: Platform.OS === 'ios' ? 13 : 15,
