@@ -168,17 +168,17 @@ const ShopScreen = () => {
             <FlatList
                 data={filteredProducts}
                 ListHeaderComponent={() => (
-                    <View>
-                        <View className='border-b-4 border-border/60 pb-3'>
-                            <View className='flex-row justify-between gap-4 items-center mb-3 px-6 '>
+                    <View className=''>
+                        <View className='px-6 py-2 pb-3 border-b-4 border-border/60'>
+                            <View className='flex-row items-center justify-between gap-4 mb-3 '>
                                 {isSearching ? (
-                                    <View className='flex-1 flex-row items-center bg-gray-100 rounded-full px-4 h-10'>
+                                    <View className='flex-row items-center flex-1 h-10 bg-gray-100 rounded-full'>
                                         <View style={{ marginTop: Platform.OS === 'ios' ? 2 : 0 }}>
                                             <Feather name="search" size={18} color="#757575" />
                                         </View>
                                         <TextInput
                                             autoFocus
-                                            className='flex-1 ml-2 font-Inter text-primary text-base p-0'
+                                            className='flex-1 p-0 ml-2 text-base font-Inter text-primary'
                                             placeholder='Search products...'
                                             value={searchQuery}
                                             onChangeText={setSearchQuery}
@@ -198,13 +198,13 @@ const ShopScreen = () => {
                                     <Text className={`font-normal font-Inter text-primary flex-1 ${Platform.OS === 'ios' ? 'text-xl' : 'text-2xl'}`}>My Shop</Text>
                                 )}
                                 
-                                <View className='flex-row gap-1 items-center'>
+                                <View className='flex-row items-center gap-1'>
                                     {isSearching ? (
                                         <Pressable className='p-2' onPress={() => {
                                             setIsSearching(false);
                                             setSearchQuery('');
                                         }}>
-                                            <Text className='text-secondary font-Inter text-base'>Cancel</Text>
+                                            <Text className='text-base text-secondary font-Inter'>Cancel</Text>
                                         </Pressable>
                                     ) : (
                                         <>
@@ -222,7 +222,7 @@ const ShopScreen = () => {
                             </View>
 
                             <Link href="/(auth)/Shops/ViewStoreDetailsScreen" asChild>
-                                <Pressable className='flex-row items-center gap-x-1.5 px-4 mb-3 w-full'>
+                                <Pressable className='flex-row items-center gap-x-1.5 mb-3 w-full'>
                                     <View className='flex-row items-baseline gap-1'>
                                         <Entypo name="star" size={17} color={rating > 0 ? `#E8B931` : `#F5F5F5`} />
                                         <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-secondary font-normal font-Inter`}>{rating}</Text>
@@ -243,21 +243,21 @@ const ShopScreen = () => {
                             </Link>
 
                             {/* shop categories  */}
-                            <View className='flex-row gap-2 px-4'>
+                            <View className='flex-row gap-2'>
                                 <Text className={`${Platform.OS === 'ios' ? 'text-sm' : 'text-base'} px-2 py-1 rounded-lg text-secondary bg-secondary/10 font-normal font-Inter`}>Fashion</Text>
                                 <Text className={`${Platform.OS === 'ios' ? 'text-sm' : 'text-base'} px-2 py-1 rounded-lg text-secondary bg-secondary/10 font-normal font-Inter`}>Fashion</Text>
                                 <Text className={`${Platform.OS === 'ios' ? 'text-sm' : 'text-base'} px-2 py-1 rounded-lg text-secondary bg-secondary/10 font-normal font-Inter`}>Fashion</Text>
                             </View>
                         </View>
 
-                        <View className='flex-row items-center justify-between h-12 px-4 mt-2'>
+                        <View className='flex-row items-center justify-between h-12 px-6 mt-2 '>
                             <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-primary font-normal font-Inter`}>
                                 {searchQuery ? `Results (${filteredProducts.length})` : `Products (${Products.length})`}
                             </Text>
                             {/* add products to shop */}
                             <Pressable
                                 onPress={() => setIsAddBottomSheetOpen(true)}
-                                className='flex-row gap-2 items-center bg-primary px-4 py-2 rounded-full'
+                                className='flex-row items-center gap-2 px-4 py-2 rounded-full bg-primary'
                             >
                                 <AntDesign name="plus" size={14} color="white" />
                                 <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} text-white font-normal font-Inter`}>Add</Text>
@@ -266,7 +266,7 @@ const ShopScreen = () => {
                     </View>
                 )}
                 renderItem={({ item }) => (
-                    <View className='px-4'>
+                    <View className='px-6'>
                         <ProductCard
                             image={item.image}
                             name={item.name}

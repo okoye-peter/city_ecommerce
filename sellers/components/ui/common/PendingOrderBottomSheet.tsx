@@ -71,9 +71,9 @@ const PendingOrderBottomSheet = () => {
                 index={1}
                 backgroundStyle={{ borderRadius: 24 }}
             >
-                <View className='flex-1 overflow-hidden rounded-t-3xl px-4 pt-4'>
+                <View className='flex-1 px-6 pt-4 overflow-hidden rounded-t-3xl'>
                     {/* Header */}
-                    <View className='flex-row justify-between items-center mb-3'>
+                    <View className='flex-row items-center justify-between mb-3'>
                         <Text className={`font-inter-semibold ${Platform.OS === 'ios' ? 'text-xl' : 'text-2xl'} text-body`}>
                             New Order
                         </Text>
@@ -86,7 +86,7 @@ const PendingOrderBottomSheet = () => {
                     </View>
 
                     {/* Animated Countdown UI */}
-                    <View className='flex-1 items-center justify-center mt-4'>
+                    <View className='items-center justify-center flex-1 mt-4'>
                         <View className='items-center justify-center' style={{ width: size, height: size }}>
                             <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
                                 {/* Background Circle (Gray) */}
@@ -120,7 +120,7 @@ const PendingOrderBottomSheet = () => {
                             </View>
                         </View>
                         
-                        <View className='mt-4 items-center'>
+                        <View className='items-center mt-4'>
                             <Text className={`font-inter-semibold text-body mb-1 ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>
                                 ORD-2026-0898
                             </Text>
@@ -132,13 +132,13 @@ const PendingOrderBottomSheet = () => {
 
                     {/* Product */}
 
-                    <View className='items-center gap-x-4 my-3 border-y border-border py-4'>
+                    <View className='items-center py-4 my-3 gap-x-4 border-y border-border'>
                         <ProductCard 
                         />
                     </View>
 
                     {/* total */}
-                    <View className='flex-row justify-between items-center my-2'>
+                    <View className='flex-row items-center justify-between my-2'>
                         <Text className={`font-inter-semibold text-body ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>
                             Total
                         </Text>
@@ -148,7 +148,7 @@ const PendingOrderBottomSheet = () => {
                     </View>
 
                     {/* Action Buttons */}
-                    <View className='pb-6 pt-4 flex-row gap-4'>
+                    <View className='flex-row gap-4 pt-4 pb-6'>
                         <CustomButton
                             buttonText='Decline'
                             onPressHandler={() => {}}

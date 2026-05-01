@@ -17,10 +17,9 @@ const ViewOrderDetails = () => {
 
   return (
     <SafeAreaView className='flex-1 pb-3'>
-
-        <ScrollView className='flex-1 bg-white' showsVerticalScrollIndicator={false}>
+        <ScrollView className='flex-1 pt-3 bg-white' showsVerticalScrollIndicator={false}>
             {/* Header */}
-            <View className='px-4 pb-2 border-b-4 border-border/50'>
+            <View className='px-6 pb-2 border-b-4 border-border/50'>
                 <View className=''>
                     <View className='flex-row items-center gap-2 mb-3'>
                         <Pressable onPress={() => router.back()} className='border border-border bg-muted-neutral p-2.5 rounded-full'>
@@ -43,12 +42,12 @@ const ViewOrderDetails = () => {
             </View>
 
             {/* Status Tracker */}
-            <View className='p-4 border-b-4 border-border/50'>
+            <View className='px-6 py-4 border-b-4 border-border/50'>
                <OrderStatusTracker currentStatus='accepted' />
             </View>
 
             {/* Order Items */}
-            <View className='px-4 py-3'>
+            <View className='px-6 py-3'>
                 <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal text-primary font-Inter`}>Order Items</Text>
                 <View className=''>
                     <View className='py-4 border-b border-border/50'>
@@ -73,7 +72,7 @@ const ViewOrderDetails = () => {
             </View>
 
             {/* Summary total */}
-            <View className='px-4 py-2 flex flex-row items-center justify-between'>
+            <View className='flex flex-row items-center justify-between px-4 py-2'>
                <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal text-primary font-Inter`}>Total</Text>
                <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal text-primary font-Inter`}>{formatPrice(23900)}</Text>
             </View>

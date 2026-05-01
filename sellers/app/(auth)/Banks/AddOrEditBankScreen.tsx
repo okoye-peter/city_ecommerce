@@ -37,14 +37,14 @@ const AddOrEditBankScreen = () => {
     return (
         <SafeAreaView className='flex-1 bg-white'>
             <View className='px-6 pb-4 pt-2.5 flex-row gap-4 items-center border-border/40 border-b-4'>
-                <Pressable onPress={goBack} className='p-2 rounded-full border border-border bg-light'>
-                    <Feather name="arrow-left" size={20} color="#1E1E1E" />
+                <Pressable onPress={goBack} className='p-2 border rounded-full border-border bg-light'>
+                    <Feather name="arrow-left" size={18} color="#1E1E1E" />
                 </Pressable>
                 <Text className={`text-primary-light ${Platform.OS === 'ios' ? 'text-2xl' : 'text-3xl'}`}>Add bank details</Text>
             </View>
 
-            <View className='px-6 pt-3 pb-6 flex-1'>
-                <View className='flex-row gap-2 items-start py-3 px-2 rounded-xl bg-light'>
+            <View className='flex-1 px-6 pt-3 pb-6'>
+                <View className='flex-row items-start gap-2 px-2 py-3 rounded-xl bg-light'>
                     <Feather name="info" size={14} color="#303030" />
                     <Text className={`font-normal text-secondary ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'} flex-1`}>Your account name must match either your registered business name or the name you used to verify your City Commerce account.</Text>
                 </View>

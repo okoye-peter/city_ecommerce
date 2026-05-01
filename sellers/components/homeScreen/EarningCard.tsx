@@ -1,12 +1,13 @@
-import { View, Text, Platform } from 'react-native'
+import { View, Text, Platform, StyleSheet } from 'react-native'
 import React from 'react'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { formatCompactNumber, formatPrice } from '@/utils/priceFormatter';
 import Feather from '@expo/vector-icons/Feather';
 
+
 const EarningCard = ({ amount, total }: { amount: number, total: number }) => {
   return (
-    <View className='bg-light px-4 py-5 rounded-xl w-full'>
+    <View className='w-full px-4 py-5 bg-light rounded-xl' style={styles.cardContainer}>
         <View className='flex-row justify-between mb-6'>
             <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal text-black-light leading-6`}>Today&apos;s Earnings</Text>
             <MaterialIcons name="arrow-forward-ios" size={14} color="text-black-light" />
@@ -27,3 +28,13 @@ const EarningCard = ({ amount, total }: { amount: number, total: number }) => {
 }
 
 export default EarningCard
+
+const styles = StyleSheet.create({
+    cardContainer: {
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.41,
+    }
+})

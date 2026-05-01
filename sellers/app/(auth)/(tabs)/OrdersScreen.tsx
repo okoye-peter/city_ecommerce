@@ -127,13 +127,13 @@ const OrdersScreen = () => {
         <SafeAreaView className='flex-1 bg-white'>
             {/* Header */}
             <View className="mb-6">
-                <Text className={`text-primary font-Inter-bold mt-6 px-3 ${Platform.OS === 'ios' ? 'text-3xl' : 'text-4xl'}`}>
+                <Text className={`text-primary font-Inter-bold mt-6 px-6 ${Platform.OS === 'ios' ? 'text-3xl' : 'text-4xl'}`}>
                     Orders
                 </Text>
             </View>
 
             {/* Segmented Tabs */}
-            <View className="px-3 mb-4 border-b-2 border-border/30 pb-6">
+            <View className="px-6 pb-6 mb-4 border-b-2 border-border/30">
                 <CustomTab
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
@@ -144,7 +144,7 @@ const OrdersScreen = () => {
             {/* Content Area */}
             <FlatList
                 data={filteredOrders}
-                contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24 }}
+                contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24 }}
                 keyExtractor={(item) => item.id.toString()}
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item: orderItem }) => (
@@ -163,8 +163,8 @@ const OrdersScreen = () => {
                     </Link>
                 )}
                 ListEmptyComponent={() => (
-                    <View className="flex-1 items-center justify-center">
-                        <Text className="text-muted-foreground font-Inter text-center text-lg">
+                    <View className="items-center justify-center flex-1 px-6">
+                        <Text className="text-lg text-center text-muted-foreground font-Inter">
                             No {TABS[activeTab].toLowerCase()} orders yet.
                         </Text>
                     </View>
