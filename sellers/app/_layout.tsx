@@ -2,13 +2,15 @@ import { Stack } from "expo-router";
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import Animated, { FadeOut } from "react-native-reanimated";
-import CustomSplash from "../components/ui/common/CustomSplash";
+import CustomSplash from "@/src/components/ui/CustomSplash";
 import "../global.css";
 import { useFonts, Inter_400Regular, Inter_700Bold, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { initStorage } from "@/src/lib/storage";
+import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 
 // Prevent the native splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -52,9 +54,35 @@ export default function RootLayout() {
         }
     }, [isAppReady]);
 
+    const [storageReady, setStorageReady] = useState(false);
+    const [storageError, setStorageError] = useState(false);
+
+    useEffect(() => {
+        initStorage()
+            .then(() => setStorageReady(true))
+            .catch((err) => {
+                console.error('Failed to initialize secure storage:', err);
+                setStorageError(true);
+            });
+    }, []);
+
     // Don't render anything until the native splash is ready to be replaced
     if (!isAppReady && !fontError) {
         return null;
+    }
+
+    if (storageError) {
+        return (
+            <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>
+                    Unable to initialize secure storage. Please restart the app.
+                </Text>
+            </View>
+        );
+    }
+
+    if (!storageReady) {
+        return <LoadingOverlay isVisible />;
     }
 
     return (
@@ -63,7 +91,6 @@ export default function RootLayout() {
                 <SafeAreaProvider>
                     <View style={{ flex: 1 }}>
                         <Stack screenOptions={{ headerShown: false }} />
-
 
                         {showCustomSplash && (
                             <Animated.View
@@ -87,3 +114,17 @@ export default function RootLayout() {
 
     );
 }
+
+const styles = StyleSheet.create({
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+    },
+    errorText: {
+        fontSize: 16,
+        textAlign: 'center',
+        color: '#cc0000',
+    },
+});

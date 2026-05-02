@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.city_commerce.sellers",
+      "bundleIdentifier": "com.citycommerce.sellers"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +25,7 @@
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.city_commerce.sellers"
+      "package": "com.citycommerce.sellers"
     },
     "web": {
       "output": "static",
@@ -51,7 +51,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
