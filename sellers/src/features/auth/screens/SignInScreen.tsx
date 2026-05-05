@@ -19,13 +19,16 @@ import Animated, {
     useSharedValue,
     useAnimatedStyle,
     withTiming,
-    runOnJS,
     Easing,
 } from 'react-native-reanimated'
+import { scheduleOnRN } from 'react-native-worklets'
 import LoadingOverlay from '@/src/components/ui/LoadingOverlay'
 import CustomButton from '@/src/components/ui/CustomButton'
 import CustomInput from '@/src/components/ui/CustomInput'
 import { Feather } from '@expo/vector-icons'
+import { signInSchema } from '../authSchema'
+import { useSignIn } from '../queries'
+import Toast from 'react-native-toast-message'
 
 const SLIDES = [
     {
@@ -101,6 +104,9 @@ const SignIn = () => {
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [activeSlide, setActiveSlide] = useState(0)
+    const [errors, setErrors] = useState<Record<string, string>>({})
+
+    const { mutateAsync: signIn, isPending } = useSignIn()
 
     const textOpacity = useSharedValue(1)
     const textX = useSharedValue(0)
@@ -108,7 +114,7 @@ const SignIn = () => {
     const animateToSlide = (next: number) => {
         textOpacity.value = withTiming(0, { duration: 240, easing: Easing.out(Easing.ease) }, (done) => {
             if (done) {
-                runOnJS(setActiveSlide)(next)
+                scheduleOnRN(setActiveSlide, next)
                 textX.value = 20
                 textOpacity.value = withTiming(1, { duration: 380, easing: Easing.out(Easing.ease) })
                 textX.value = withTiming(0, { duration: 380, easing: Easing.out(Easing.ease) })
@@ -132,11 +138,43 @@ const SignIn = () => {
     const inactivePadding = Math.max(insets.bottom, 24)
 
 
-    const handleSignIn = () => { router.replace("../(auth)/IdentityVerification/VerifyIdentityScreen") }
+    const handleSignIn = async () => {
+        const result = signInSchema.safeParse({ email, password })
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {}
+            for (const issue of result.error.issues) {
+                const key = issue.path[0] as string
+                if (!fieldErrors[key]) fieldErrors[key] = issue.message
+            }
+            setErrors(fieldErrors)
+            return
+        }
+        setErrors({})
+
+        try {
+            await signIn({ email, password })
+            Toast.show({
+                type: 'success',
+                text1: 'Login successful',
+                text2: 'Welcome back!',
+                swipeable: true,
+            })
+            router.replace('/(auth)/(tabs)/HomeScreen')
+        } catch (error: any) {
+            const message = error?.response?.data?.message ?? 'Sign in failed. Please try again.'
+            Toast.show({
+                type: 'error',
+                text1: 'Sign In Error',
+                text2: message,
+                swipeable: true,
+            })
+        }
+    }
 
 
     return (
         <>
+            <LoadingOverlay isVisible={isPending} />
             <View style={{ flex: 1, backgroundColor: '#000' }}>
                 <StatusBar style="light" />
 
@@ -153,10 +191,9 @@ const SignIn = () => {
                 />
 
                 <KeyboardAvoidingView
-                    behavior="position"
+                    behavior={Platform.OS === 'ios' ? 'position' : undefined}
                     style={{ flex: 1 }}
                     contentContainerStyle={{ flex: 1 }}
-                    keyboardVerticalOffset={Platform.OS === 'ios' ? -30 : -40}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={{ flex: 1 }}>
@@ -210,7 +247,7 @@ const SignIn = () => {
                                 </Animated.View>
 
                                 {/* Dot indicators */}
-                                <View style={{ flexDirection: 'row', gap: 6, marginTop: 26 }}>
+                                <View style={{ flexDirection: 'row', gap: 6, marginTop: 26, marginBottom: 20 }}>
                                     {SLIDES.map((_, i) => (
                                         <Dot
                                             key={i}
@@ -244,7 +281,7 @@ const SignIn = () => {
                                             fontWeight: '700',
                                             color: '#1E1E1E',
                                             letterSpacing: -0.5,
-                                            marginBottom: 6,
+                                            marginBottom: 4,
                                         }}
                                     >
                                         Welcome back
@@ -252,9 +289,9 @@ const SignIn = () => {
                                     <Text
                                         style={{
                                             color: '#6B7280',
-                                            fontSize: Platform.OS === 'ios' ? 14 : 15,
+                                            fontSize: Platform.OS === 'ios' ? 12 : 14,
                                             lineHeight: 22,
-                                            marginBottom: 22,
+                                            marginBottom: 10,
                                         }}
                                     >
                                         Sign in to manage your store and reach your customers.
@@ -264,6 +301,7 @@ const SignIn = () => {
                                         label="Email address"
                                         value={email}
                                         setValue={setEmail}
+                                        error={errors.email}
                                         placeholder="you@example.com"
                                         keyboardType="email-address"
                                     />
@@ -272,6 +310,7 @@ const SignIn = () => {
                                         label="Password"
                                         value={password}
                                         setValue={setPassword}
+                                        error={errors.password}
                                         placeholder="Enter your password"
                                         secureTextEntry={!showPassword}
                                         suffix={

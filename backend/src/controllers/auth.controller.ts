@@ -34,6 +34,12 @@ export const forgotPassword = catchAsync(async (req: Request, res: Response) => 
   ApiResponse.success(res, null, 'If that email exists, a reset code has been sent.');
 });
 
+export const verifyForgotPasswordOtp = catchAsync(async (req: Request, res: Response) => {
+    const { email, otp } = req.body
+    await authService.verifyForgotPasswordOtp(email, otp)
+    ApiResponse.success(res, null, 'OTP verified. You may now reset your password.')
+})
+
 export const resetPassword = catchAsync(async (req: Request, res: Response) => {
   const { email, otp, newPassword } = req.body;
   await authService.resetPassword(email, otp, newPassword);

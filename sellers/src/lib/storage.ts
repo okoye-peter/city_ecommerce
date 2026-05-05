@@ -6,40 +6,37 @@ const KEYS = {
     USER: 'user',
 } as const;
 
-// In-memory cache — populated by initStorage() so sync reads work
-let _cachedAccessToken: string | null = null;
-let _cachedUser: string | null = null;
-let _initialized = false;
+// In-memory cache for sync reads (Axios interceptor needs getAccessToken() to be sync)
+let _accessToken: string | null = null;
+let _user: string | null = null;
 
 /**
- * Call once at app startup before rendering any screen.
- * Pre-loads tokens into memory so sync getAccessToken() / getUser() work.
+ * Call once at app startup. Pre-loads access token and user into memory
+ * so the Axios request interceptor can read them synchronously.
  */
 export async function initStorage(): Promise<void> {
-    if (_initialized) return;
-    _cachedAccessToken = await SecureStore.getItemAsync(KEYS.ACCESS_TOKEN);
-    _cachedUser = await SecureStore.getItemAsync(KEYS.USER);
-    _initialized = true;
+    _accessToken = await SecureStore.getItemAsync(KEYS.ACCESS_TOKEN);
+    _user = await SecureStore.getItemAsync(KEYS.USER);
 }
 
 export const secureStorage = {
-    // ── Access token — sync read from memory cache (required by Axios interceptor)
+    // ── Access token — SecureStore persisted, memory-cached for sync reads
 
-    setAccessToken(token: string): void {
-        _cachedAccessToken = token;
-        SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, token);
+    async setAccessToken(token: string): Promise<void> {
+        _accessToken = token;
+        await SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, token);
     },
 
     getAccessToken(): string | undefined {
-        return _cachedAccessToken ?? undefined;
+        return _accessToken ?? undefined;
     },
 
-    deleteAccessToken(): void {
-        _cachedAccessToken = null;
-        SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN);
+    async deleteAccessToken(): Promise<void> {
+        _accessToken = null;
+        await SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN);
     },
 
-    // ── Refresh token — always async, never cached in memory
+    // ── Refresh token — SecureStore only, never in memory (hardware-backed)
 
     async setRefreshToken(token: string): Promise<void> {
         await SecureStore.setItemAsync(KEYS.REFRESH_TOKEN, token);
@@ -53,28 +50,31 @@ export const secureStorage = {
         await SecureStore.deleteItemAsync(KEYS.REFRESH_TOKEN);
     },
 
-    // ── User — sync read from memory cache
+    // ── User — SecureStore persisted, memory-cached for sync reads
 
-    setUser(user: object): void {
+    async setUser(user: object): Promise<void> {
         const serialized = JSON.stringify(user);
-        _cachedUser = serialized;
-        SecureStore.setItemAsync(KEYS.USER, serialized);
+        if (typeof serialized !== 'string') {
+            throw new Error('Cannot store an empty user session.');
+        }
+        _user = serialized;
+        await SecureStore.setItemAsync(KEYS.USER, serialized);
     },
 
     getUser<T>(): T | null {
-        return _cachedUser ? (JSON.parse(_cachedUser) as T) : null;
+        return _user ? (JSON.parse(_user) as T) : null;
     },
 
-    deleteUser(): void {
-        _cachedUser = null;
-        SecureStore.deleteItemAsync(KEYS.USER);
+    async deleteUser(): Promise<void> {
+        _user = null;
+        await SecureStore.deleteItemAsync(KEYS.USER);
     },
 
     // ── Clear all (logout)
 
     async clearAll(): Promise<void> {
-        this.deleteAccessToken();
-        this.deleteUser();
+        await this.deleteAccessToken();
+        await this.deleteUser();
         await this.deleteRefreshToken();
     },
 };

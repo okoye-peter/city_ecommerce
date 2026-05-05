@@ -29,7 +29,7 @@ async function issueTokens(userId: string, email: string, role: Role) {
   const accessToken = generateAccessToken({ id: userId, email, role });
   const refreshToken = generateRefreshToken({ id: userId });
   await prisma.user.update({
-    where: { id: userId },
+    where: { id: BigInt(userId) },
     data: {
       refreshToken: await bcrypt.hash(refreshToken, 10),
       lastLoginAt: new Date(),
@@ -83,10 +83,8 @@ export async function register(input: {
     },
   });
 
-  await sendVerificationEmail(user.email, user.firstName, otp);
-
   return {
-    message: 'Registration successful. Check your email for the verification code.',
+    message: 'Registration successful.',
     email: user.email,
   };
 }
@@ -118,7 +116,7 @@ export async function verifyEmail(email: string, otp: string) {
     },
   });
 
-  const tokens = await issueTokens(user.id, user.email, user.role);
+  const tokens = await issueTokens(user.id.toString(), user.email, user.role);
   const { password: _, refreshToken: __, emailVerifyOtp: ___, emailVerifyOtpExpiry: ____, passwordResetOtp: _____, passwordResetOtpExpiry: ______, ...safeUser } = user;
   return { user: { ...safeUser, isVerified: true }, ...tokens };
 }
@@ -170,12 +168,12 @@ export async function login(input: { email: string; password: string }) {
       },
     });
     await sendVerificationEmail(user.email, user.firstName, otp);
-    throw ApiError.forbidden(
-      'Email not verified. A new verification code has been sent to your email.',
-    );
+    // throw ApiError.forbidden(
+    //   'Email not verified. A new verification code has been sent to your email.',
+    // );
   }
 
-  const tokens = await issueTokens(user.id, user.email, user.role);
+  const tokens = await issueTokens(user.id.toString(), user.email, user.role);
   const { password: _, refreshToken: __, emailVerifyOtp: ___, emailVerifyOtpExpiry: ____, passwordResetOtp: _____, passwordResetOtpExpiry: ______, ...safeUser } = user;
   return { user: safeUser, ...tokens };
 }
@@ -196,6 +194,21 @@ export async function forgotPassword(email: string) {
   });
 
   await sendPasswordResetEmail(user.email, user.firstName, otp);
+}
+
+export async function verifyForgotPasswordOtp(email: string, otp: string) {
+    const user = await prisma.user.findUnique({ where: { email, passwordResetOtp: otp } });
+
+    if(!user) {
+        throw ApiError.badRequest('Invalid password reset OTP')
+    }
+
+    if (!user.passwordResetOtpExpiry || user.passwordResetOtpExpiry < new Date()) {
+        throw ApiError.badRequest('Reset code has expired. Request a new one.');
+    }
+
+    return 
+
 }
 
 export async function resetPassword(email: string, otp: string, newPassword: string) {
@@ -267,7 +280,7 @@ export async function googleAuth(idToken: string) {
     });
   }
 
-  const tokens = await issueTokens(user.id, user.email, user.role);
+  const tokens = await issueTokens(user.id.toString(), user.email, user.role);
   const { password: _, refreshToken: __, emailVerifyOtp: ___, emailVerifyOtpExpiry: ____, passwordResetOtp: _____, passwordResetOtpExpiry: ______, ...safeUser } = user;
   return { user: safeUser, ...tokens };
 }
@@ -280,14 +293,14 @@ export async function refreshTokens(token: string) {
     throw ApiError.unauthorized('Invalid or expired refresh token.');
   }
 
-  const user = await prisma.user.findUnique({ where: { id: payload.id } });
+  const user = await prisma.user.findUnique({ where: { id: BigInt(payload.id) } });
   if (!user?.refreshToken) throw ApiError.unauthorized('Refresh token not found.');
 
   const valid = await bcrypt.compare(token, user.refreshToken);
   if (!valid) throw ApiError.unauthorized('Refresh token mismatch.');
 
-  const accessToken = generateAccessToken({ id: user.id, email: user.email, role: user.role });
-  const newRefreshToken = generateRefreshToken({ id: user.id });
+  const accessToken = generateAccessToken({ id: user.id.toString(), email: user.email, role: user.role });
+  const newRefreshToken = generateRefreshToken({ id: user.id.toString() });
 
   await prisma.user.update({
     where: { id: user.id },
@@ -299,14 +312,14 @@ export async function refreshTokens(token: string) {
 
 export async function logout(userId: string) {
   await prisma.user.update({
-    where: { id: userId },
+    where: { id: BigInt(userId) },
     data: { refreshToken: null },
   });
 }
 
 export async function getProfile(userId: string) {
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: BigInt(userId) },
     select: {
       id: true,
       firstName: true,

@@ -11,6 +11,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { initStorage } from "@/src/lib/storage";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
+import { useAuthStore } from '@/src/features/auth/store/authStore';
+import { setSessionExpiredHandler } from '@/src/lib/axios';
+
+const queryClient = new QueryClient();
 
 // Prevent the native splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -56,15 +62,19 @@ export default function RootLayout() {
 
     const [storageReady, setStorageReady] = useState(false);
     const [storageError, setStorageError] = useState(false);
+    const initializeAuth = useAuthStore(s => s.initializeAuth);
+    const logout = useAuthStore(s => s.logout);
 
     useEffect(() => {
+        setSessionExpiredHandler(logout);
         initStorage()
+            .then(() => initializeAuth())
             .then(() => setStorageReady(true))
             .catch((err) => {
                 console.error('Failed to initialize secure storage:', err);
                 setStorageError(true);
             });
-    }, []);
+    }, [initializeAuth, logout]);
 
     // Don't render anything until the native splash is ready to be replaced
     if (!isAppReady && !fontError) {
@@ -86,32 +96,34 @@ export default function RootLayout() {
     }
 
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <BottomSheetModalProvider>
-                <SafeAreaProvider>
-                    <View style={{ flex: 1 }}>
-                        <Stack screenOptions={{ headerShown: false }} />
+        <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <BottomSheetModalProvider>
+                    <SafeAreaProvider>
+                        <View style={{ flex: 1 }}>
+                            <Stack screenOptions={{ headerShown: false }} />
 
-                        {showCustomSplash && (
-                            <Animated.View
-                                exiting={FadeOut.duration(800)}
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    zIndex: 9999
-                                }}
-                            >
-                                <CustomSplash />
-                            </Animated.View>
-                        )}
-                    </View>
-                </SafeAreaProvider>
-            </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-
+                            {showCustomSplash && (
+                                <Animated.View
+                                    exiting={FadeOut.duration(800)}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        zIndex: 9999
+                                    }}
+                                >
+                                    <CustomSplash />
+                                </Animated.View>
+                            )}
+                        </View>
+                    </SafeAreaProvider>
+                </BottomSheetModalProvider>
+            </GestureHandlerRootView>
+            <Toast />
+        </QueryClientProvider>
     );
 }
 

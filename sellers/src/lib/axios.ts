@@ -1,14 +1,13 @@
 import axios, {
   AxiosError,
   AxiosInstance,
+  AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
 import { secureStorage } from '@/src/lib/storage';
+import type { ApiResponse, AuthTokens } from '@/src/features/auth/api';
 
-const getAuthStore = () =>
-  require('@/src/features/auth/store/authStore').useAuthStore.getState();
-
-export const BASE_URL = process.env.API_BASE_URL;
+export const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -16,11 +15,19 @@ const api: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// ─── Request interceptor — sync MMKV read ────────────────────────────────────
+// Injected at app startup — breaks the circular dependency between
+// axios.ts and authStore.ts without using require().
+let _onSessionExpired: (() => Promise<void>) | null = null;
+
+export function setSessionExpiredHandler(handler: () => Promise<void>) {
+  _onSessionExpired = handler;
+}
+
+// ─── Request interceptor — attach access token ────────────────────────────────
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = secureStorage.getAccessToken(); // sync — MMKV
+    const token = secureStorage.getAccessToken(); // sync in-memory cache
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,20 +36,24 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// ─── Response interceptor — 401 handling ─────────────────────────────────────
+// ─── Response interceptor — 401 / token refresh ───────────────────────────────
 
 let isRefreshing = false;
 
 type QueueEntry = {
-  resolve: (token: string) => void;
+  resolve: (response: AxiosResponse) => void;
   reject: (error: unknown) => void;
 };
 let failedQueue: QueueEntry[] = [];
 
-function processQueue(error: unknown, token: string | null) {
-  failedQueue.forEach(({ resolve, reject }) =>
-    error ? reject(error) : resolve(token!),
-  );
+function processQueue(error: unknown, retryFn?: () => Promise<AxiosResponse>) {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error || !retryFn) {
+      reject(error);
+    } else {
+      retryFn().then(resolve).catch(reject);
+    }
+  });
   failedQueue = [];
 }
 
@@ -58,11 +69,8 @@ api.interceptors.response.use(
     }
 
     if (isRefreshing) {
-      return new Promise<string>((resolve, reject) => {
+      return new Promise<AxiosResponse>((resolve, reject) => {
         failedQueue.push({ resolve, reject });
-      }).then((newToken) => {
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return api(originalRequest);
       });
     }
 
@@ -70,28 +78,26 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      // ✅ Refresh token fetched from Keychain — never from Zustand/memory
       const refreshToken = await secureStorage.getRefreshToken();
-      if (!refreshToken) throw new Error('No refresh token in Keychain');
+      if (!refreshToken) throw new Error('No refresh token');
 
-      const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
+      const { data: response } = await axios.post<ApiResponse<AuthTokens>>(`${BASE_URL}/auth/refresh`, {
         refreshToken,
       });
 
-      const { accessToken, refreshToken: newRefreshToken } = data;
+      const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-      // updateTokens writes to both MMKV (accessToken) and Keychain (refreshToken)
-      await getAuthStore().updateTokens(
-        accessToken,
-        newRefreshToken ?? refreshToken,
-      );
+      await secureStorage.setAccessToken(accessToken);
+      if (newRefreshToken) await secureStorage.setRefreshToken(newRefreshToken);
 
       originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-      processQueue(null, accessToken);
-      return api(originalRequest);
+
+      const retry = () => api(originalRequest);
+      processQueue(null, retry);
+      return retry();
     } catch (refreshError) {
-      processQueue(refreshError, null);
-      await getAuthStore().logout(); // async now (Keychain delete)
+      processQueue(refreshError);
+      await _onSessionExpired?.();
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

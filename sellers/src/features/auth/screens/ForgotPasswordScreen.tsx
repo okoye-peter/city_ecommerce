@@ -17,10 +17,9 @@ import Animated, {
     useSharedValue,
     useAnimatedStyle,
     withTiming,
-    // eslint-disable-next-line deprecation/deprecation
-    runOnJS,
     Easing,
 } from 'react-native-reanimated'
+import { scheduleOnRN } from 'react-native-worklets'
 import LoadingOverlay from '@/src/components/ui/LoadingOverlay'
 import CustomButton from '@/src/components/ui/CustomButton'
 import CustomInput from '@/src/components/ui/CustomInput'
@@ -88,7 +87,7 @@ const ForgotPassword = () => {
     const animateToStep = (next: Step) => {
         contentOpacity.value = withTiming(0, { duration: 220, easing: Easing.out(Easing.ease) }, (done) => {
             if (done) {
-                runOnJS(setStep)(next)
+                scheduleOnRN(setStep, next)
                 contentX.value = 22
                 contentOpacity.value = withTiming(1, { duration: 340, easing: Easing.out(Easing.ease) })
                 contentX.value = withTiming(0, { duration: 340, easing: Easing.out(Easing.ease) })
@@ -117,9 +116,9 @@ const ForgotPassword = () => {
                 <StatusBar style="dark" />
 
                 <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    behavior={Platform.OS === 'ios' ? 'position' : undefined}
                     style={{ flex: 1 }}
-                    keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+                    contentContainerStyle={{ flex: 1 }}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={{ flex: 1 }}>
@@ -272,7 +271,7 @@ const ForgotPassword = () => {
                                                     containerStyle: styles.otpContainer,
                                                     pinCodeContainerStyle: styles.pinCodeContainer,
                                                     pinCodeTextStyle: styles.pinCodeText,
-                                                    activePinCodeContainerStyle: styles.activePinCode,
+                                                    focusedPinCodeContainerStyle: styles.activePinCode,
                                                     filledPinCodeContainerStyle: styles.filledPinCode,
                                                     placeholderTextStyle: styles.otpPlaceholder,
                                                 }}
@@ -293,7 +292,7 @@ const ForgotPassword = () => {
                                                 }}
                                             >
                                                 <Text style={{ color: '#6B7280', fontSize: 13 }}>
-                                                    Didn't receive it?{' '}
+                                                    Didn&apos;t receive it?{' '}
                                                 </Text>
                                                 <Pressable
                                                     style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}

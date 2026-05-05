@@ -21,11 +21,15 @@ export function errorHandler(
   }
 
   if (err instanceof ZodError) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: err.flatten().fieldErrors,
-    });
+    const message = err.issues
+      .map((issue) => {
+        // Drop the leading 'body' / 'query' / 'params' wrapper added by validate middleware
+        const field = issue.path.slice(1).join('.');
+        return field ? `${field}: ${issue.message}` : issue.message;
+      })
+      .join(', ');
+
+    return res.status(400).json({ success: false, message });
   }
 
   if (err instanceof Prisma.PrismaClientKnownRequestError) {

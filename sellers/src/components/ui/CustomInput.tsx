@@ -16,6 +16,7 @@ interface Props {
     isBottomSheet?: boolean;
     classStyle?: string;
     onFocus?: () => void;
+    error?: string;
 }
 
 const CustomInput = ({
@@ -31,6 +32,7 @@ const CustomInput = ({
     isBottomSheet = false,
     classStyle,
     onFocus,
+    error,
 }: Props) => {
     const [isFocused, setIsFocused] = useState(false);
 
@@ -38,7 +40,7 @@ const CustomInput = ({
 
     const animatedBorderStyle = useAnimatedStyle(() => {
         return {
-            borderColor: withTiming(isFocused ? '#2C2C2C' : '#D9D9D9', { duration: 250 }),
+            borderColor: withTiming(error ? '#EF4444' : isFocused ? '#2C2C2C' : '#D9D9D9', { duration: 250 }),
         };
     });
 
@@ -111,6 +113,9 @@ const CustomInput = ({
                     </View>
                 )}
             </Animated.View>
+            {error && (
+                <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{error}</Text>
+            )}
         </View>
     )
 }

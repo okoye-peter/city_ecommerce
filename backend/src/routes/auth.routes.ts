@@ -12,6 +12,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   refreshSchema,
+  forgotPasswordVerifyOtpSchema,
 } from '../validators/auth.validator';
 
 const router = Router();
@@ -22,6 +23,7 @@ router.post('/login', authLimiter, validate(loginSchema), authController.login);
 router.post('/verify-email', validate(verifyEmailSchema), authController.verifyEmail);
 router.post('/resend-verification', authLimiter, validate(resendVerificationSchema), authController.resendVerification);
 router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), authController.forgotPassword);
+router.post('forgot-password/verify-otp', authLimiter, validate(forgotPasswordVerifyOtpSchema), authController.verifyForgotPasswordOtp)
 router.post('/reset-password', authLimiter, validate(resetPasswordSchema), authController.resetPassword);
 
 // Public — Google OAuth

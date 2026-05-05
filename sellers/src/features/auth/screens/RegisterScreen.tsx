@@ -9,7 +9,7 @@ import {
     Pressable,
     StyleSheet,
 } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { StatusBar } from 'expo-status-bar'
@@ -19,14 +19,17 @@ import Animated, {
     useSharedValue,
     useAnimatedStyle,
     withTiming,
-    withSpring,
-    runOnJS,
     Easing,
 } from 'react-native-reanimated'
+import { scheduleOnRN } from 'react-native-worklets'
 import LoadingOverlay from '@/src/components/ui/LoadingOverlay'
 import CustomButton from '@/src/components/ui/CustomButton'
 import CustomInput from '@/src/components/ui/CustomInput'
 import { Feather } from '@expo/vector-icons'
+import { registrationStepOneSchema, registrationStepTwoSchema } from '../authSchema'
+import { useRegister } from '../queries'
+import Toast from 'react-native-toast-message'
+
 
 type Step = 1 | 2
 
@@ -82,15 +85,8 @@ const Register = () => {
     const [confirmPassword, setConfirmPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-    // Card springs up from bottom on mount
-    const cardY = useSharedValue(360)
-    const cardOpacity = useSharedValue(0)
-
-    useEffect(() => {
-        cardOpacity.value = withTiming(1, { duration: 300 })
-        cardY.value = withSpring(0, { damping: 22, stiffness: 160 })
-    }, [cardOpacity, cardY])
+    const [errors, setErrors] = useState<Record<string, string>>({})
+    const { mutateAsync: register, isPending } = useRegister()
 
     // Step content cross-fade + slide
     const contentOpacity = useSharedValue(1)
@@ -99,18 +95,13 @@ const Register = () => {
     const animateToStep = (next: Step) => {
         contentOpacity.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.ease) }, (done) => {
             if (done) {
-                runOnJS(setStep)(next)
+                scheduleOnRN(setStep, next)
                 contentX.value = 24
                 contentOpacity.value = withTiming(1, { duration: 320, easing: Easing.out(Easing.ease) })
                 contentX.value = withTiming(0, { duration: 320, easing: Easing.out(Easing.ease) })
             }
         })
     }
-
-    const cardAnimStyle = useAnimatedStyle(() => ({
-        transform: [{ translateY: cardY.value }],
-        opacity: cardOpacity.value,
-    }))
 
     const contentAnimStyle = useAnimatedStyle(() => ({
         opacity: contentOpacity.value,
@@ -125,8 +116,60 @@ const Register = () => {
         }
     }
 
+    const handleStepOneNext = () => {
+        const result = registrationStepOneSchema.safeParse({ firstName, lastName, email })
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {}
+            for (const issue of result.error.issues) {
+                const key = issue.path[0] as string
+                if (!fieldErrors[key]) fieldErrors[key] = issue.message
+            }
+            setErrors(fieldErrors)
+            return
+        }
+        setErrors({})
+        animateToStep(2)
+    }
+
+    const handleRegistration = async () => {
+        const result = registrationStepTwoSchema.safeParse({ password, confirmPassword })
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {}
+            for (const issue of result.error.issues) {
+                const key = issue.path[0] as string
+                if (!fieldErrors[key]) fieldErrors[key] = issue.message
+            }
+            setErrors(fieldErrors)
+            return
+        }
+        setErrors({})
+        try {
+            await register({ firstName, lastName, email, password, passwordConfirmation: confirmPassword })
+            Toast.show({
+                type: 'success',
+                text1: 'Registration successful',
+                text2: 'Please login to continue.',
+                swipeable: true,
+            })
+           
+            router.replace({ pathname: '/(guest)/SignInScreen'})
+        } catch (error: any) {
+            
+            const message = error?.response?.data?.message ?? 'Registration failed. Please try again.'
+            Toast.show({
+                type: 'error',
+                text1: 'Registration Error',
+                text2: message,
+                swipeable: true,
+            })
+            // setErrors({ general: message })
+        }
+    }
+
     return (
         <>
+            <LoadingOverlay isVisible={isPending} />
+            
             <View style={{ flex: 1, backgroundColor: '#000' }}>
                 <StatusBar style="light" />
 
@@ -208,29 +251,25 @@ const Register = () => {
                 </View>
 
                 <KeyboardAvoidingView
-                    behavior="position"
+                    behavior={Platform.OS === 'ios' ? 'position' : undefined}
                     style={{ flex: 1 }}
                     contentContainerStyle={{ flex: 1 }}
-                    keyboardVerticalOffset={Platform.OS === 'ios' ? -30 : -40}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={{ flex: 1 }}>
                             <View style={{ flex: 1 }} />
 
-                            {/* Animated form card */}
-                            <Animated.View
-                                style={[
-                                    {
-                                        backgroundColor: 'white',
-                                        borderTopLeftRadius: 38,
-                                        borderTopRightRadius: 38,
-                                        paddingHorizontal: 30,
-                                        paddingTop: 28,
-                                        paddingBottom: Math.max(insets.bottom, 24),
-                                        maxHeight: '76%',
-                                    },
-                                    cardAnimStyle,
-                                ]}
+                            {/* Form card */}
+                            <View
+                                style={{
+                                    backgroundColor: 'white',
+                                    borderTopLeftRadius: 38,
+                                    borderTopRightRadius: 38,
+                                    paddingHorizontal: 30,
+                                    paddingTop: 28,
+                                    paddingBottom: Math.max(insets.bottom, 24),
+                                    maxHeight: '76%',
+                                }}
                             >
                                 {/* Card header with step indicator */}
                                 <View
@@ -291,6 +330,7 @@ const Register = () => {
                                                             value={firstName}
                                                             setValue={setFirstName}
                                                             placeholder="John"
+                                                            error={errors.firstName}
                                                         />
                                                     </View>
                                                     <View style={{ flex: 1 }}>
@@ -299,6 +339,7 @@ const Register = () => {
                                                             value={lastName}
                                                             setValue={setLastName}
                                                             placeholder="Doe"
+                                                            error={errors.lastName}
                                                         />
                                                     </View>
                                                 </View>
@@ -309,10 +350,11 @@ const Register = () => {
                                                     setValue={setEmail}
                                                     placeholder="you@example.com"
                                                     keyboardType="email-address"
+                                                    error={errors.email}
                                                 />
 
                                                 <CustomButton
-                                                    onPressHandler={() => animateToStep(2)}
+                                                    onPressHandler={handleStepOneNext}
                                                     buttonText="Continue"
                                                     classStyle="mt-2"
                                                 />
@@ -357,6 +399,7 @@ const Register = () => {
                                                     setValue={setPassword}
                                                     placeholder="Min. 8 characters"
                                                     secureTextEntry={!showPassword}
+                                                    error={errors.password}
                                                     suffix={
                                                         <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={8}>
                                                             <Feather
@@ -376,6 +419,7 @@ const Register = () => {
                                                     setValue={setConfirmPassword}
                                                     placeholder="Re-enter your password"
                                                     secureTextEntry={!showConfirmPassword}
+                                                    error={errors.confirmPassword}
                                                     suffix={
                                                         <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} hitSlop={8}>
                                                             <Feather
@@ -387,8 +431,13 @@ const Register = () => {
                                                     }
                                                 />
 
+                                                {errors.general && (
+                                                    <Text style={{ color: '#EF4444', fontSize: 13, marginBottom: 8, textAlign: 'center' }}>
+                                                        {errors.general}
+                                                    </Text>
+                                                )}
                                                 <CustomButton
-                                                    onPressHandler={() => {}}
+                                                    onPressHandler={handleRegistration}
                                                     buttonText="Create account"
                                                     classStyle="mt-2"
                                                 />
@@ -442,13 +491,13 @@ const Register = () => {
                                         </View>
                                     </Animated.View>
                                 </ScrollView>
-                            </Animated.View>
+                            </View>
                         </View>
                     </TouchableWithoutFeedback>
                 </KeyboardAvoidingView>
             </View>
 
-            <LoadingOverlay isVisible={false} />
+            <LoadingOverlay isVisible={isPending} />
         </>
     )
 }
