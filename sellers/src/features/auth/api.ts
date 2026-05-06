@@ -22,6 +22,7 @@ export interface RegisterPayload {
     email: string
     password: string
     passwordConfirmation: string
+    role: 'SELLER'
 }
 
 export type RegisterResponse = ApiResponse<{ email: string; message: string }>
@@ -51,3 +52,11 @@ export const sendEmailVerification = (email: string): Promise<ApiResponse<null>>
 
 export const verifyEmail = (email: string, otp: string): Promise<ApiResponse<AuthResponse>> =>
     api.post('/auth/verify-email', { email, otp }).then(r => r.data)
+
+export const getAuthUser = (): Promise<User> =>
+    api.get('/users/profile').then(r => r.data.data.user)
+
+// Sends the Google-issued idToken to your backend. The backend verifies it with
+// Google's public keys, then creates or fetches the user and returns your JWT pair.
+export const googleSignIn = (idToken: string): Promise<AuthResponse> =>
+    api.post<ApiResponse<AuthResponse>>('/auth/google', { idToken }).then(r => r.data.data)

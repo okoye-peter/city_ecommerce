@@ -144,7 +144,7 @@ const Register = () => {
         }
         setErrors({})
         try {
-            await register({ firstName, lastName, email, password, passwordConfirmation: confirmPassword })
+            await register({ firstName, lastName, email, password, passwordConfirmation: confirmPassword, role: 'SELLER' })
             Toast.show({
                 type: 'success',
                 text1: 'Registration successful',

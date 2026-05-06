@@ -1,8 +1,13 @@
 import React from 'react'
-import { Stack, Redirect, useSegments } from 'expo-router'
+import { Stack, Redirect, useSegments, useRouter } from 'expo-router'
 import { useAuthStore, selectUser } from '@/src/features/auth/store/authStore'
 
+
+
 const AuthRootLayout = () => {
+    // const router = useRouter();
+    // const logout = useAuthStore(s => s.logout)
+    // logout().then(() =>router.replace('/(guest)/SignInScreen')) // Temporary: force logout on app start for testing
     const user = useAuthStore(selectUser)
     const segments = useSegments()
 
@@ -17,6 +22,11 @@ const AuthRootLayout = () => {
 
     if (needsIdentity && !onIdentityFlow) {
         return <Redirect href="/(auth)/IdentityVerification/VerifyIdentityScreen" />
+    }
+
+    const onStoreSetup = segments.some((s: string) => s === 'Shops')
+    if(user.storeCount === 0 && !onStoreSetup) {
+        return <Redirect href="/(auth)/Shops/StoreSetupScreen" />
     }
 
     return <Stack screenOptions={{ headerShown: false }} />

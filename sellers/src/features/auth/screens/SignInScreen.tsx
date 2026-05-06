@@ -26,8 +26,9 @@ import LoadingOverlay from '@/src/components/ui/LoadingOverlay'
 import CustomButton from '@/src/components/ui/CustomButton'
 import CustomInput from '@/src/components/ui/CustomInput'
 import { Feather } from '@expo/vector-icons'
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'
 import { signInSchema } from '../authSchema'
-import { useSignIn } from '../queries'
+import { useSignIn, useGoogleSignIn } from '../queries'
 import Toast from 'react-native-toast-message'
 
 const SLIDES = [
@@ -107,6 +108,7 @@ const SignIn = () => {
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     const { mutateAsync: signIn, isPending } = useSignIn()
+    const { mutateAsync: googleSignIn, isPending: isGooglePending } = useGoogleSignIn()
 
     const textOpacity = useSharedValue(1)
     const textX = useSharedValue(0)
@@ -137,6 +139,39 @@ const SignIn = () => {
     const slide = SLIDES[activeSlide]
     const inactivePadding = Math.max(insets.bottom, 24)
 
+
+    const handleGoogleSignIn = async () => {
+        try {
+            // On Android, confirms Google Play Services are available before proceeding.
+            // This is a no-op on iOS but safe to call on both platforms.
+            await GoogleSignin.hasPlayServices()
+
+            const result = await GoogleSignin.signIn()
+
+            // The SDK returns a discriminated union — always check `type` before
+            // reading `data`. 'success' is the only case that has an idToken.
+            if (result.type !== 'success') return
+
+            // idToken can be null when Google omits it (e.g. cached sign-in on some
+            // Android versions). Treat it the same as a non-success result.
+            if (!result.data.idToken) return
+
+            await googleSignIn(result.data.idToken)
+            Toast.show({ type: 'success', text1: 'Login successful', text2: 'Welcome back!', swipeable: true })
+            router.replace('/(auth)/(tabs)/HomeScreen')
+        } catch (error: any) {
+            // SIGN_IN_CANCELLED: user dismissed the picker — not an error, stay silent.
+            // IN_PROGRESS: another sign-in is already running — ignore.
+            // Any other code is a real failure worth surfacing.
+            if (
+                error.code === statusCodes.SIGN_IN_CANCELLED ||
+                error.code === statusCodes.IN_PROGRESS
+            ) return
+
+            const message = error?.response?.data?.message ?? 'Google sign in failed. Please try again.'
+            Toast.show({ type: 'error', text1: 'Sign In Error', text2: message, swipeable: true })
+        }
+    }
 
     const handleSignIn = async () => {
         const result = signInSchema.safeParse({ email, password })
@@ -174,7 +209,7 @@ const SignIn = () => {
 
     return (
         <>
-            <LoadingOverlay isVisible={isPending} />
+            <LoadingOverlay isVisible={isPending || isGooglePending} />
             <View style={{ flex: 1, backgroundColor: '#000' }}>
                 <StatusBar style="light" />
 
@@ -368,8 +403,10 @@ const SignIn = () => {
 
                                     {/* Google */}
                                     <Pressable
+                                        onPress={handleGoogleSignIn}
+                                        disabled={isGooglePending}
                                         style={({ pressed }) => ({
-                                            opacity: pressed ? 0.8 : 1,
+                                            opacity: pressed || isGooglePending ? 0.6 : 1,
                                         })}
                                         className='flex-row items-center justify-center gap-1.5 py-3 border border-gray-300 rounded-full'
                                     >

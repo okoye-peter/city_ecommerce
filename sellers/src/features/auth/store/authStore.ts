@@ -44,6 +44,7 @@ export interface User {
   isActive: boolean;
   lastLoginAt: string;
   createdAt: string;
+  storeCount?: number;
 }
 
 type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
@@ -59,6 +60,7 @@ interface AuthState {
     refreshToken: string;
   }) => Promise<void>;
 
+  setUser: (user: User) => Promise<void>;
   updateTokens: (accessToken: string, refreshToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
@@ -76,6 +78,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (user) await secureStorage.setUser(user);
 
     set({ user, accessToken: accessToken ?? null, status: 'authenticated' });
+  },
+
+  async setUser(user: User) {
+    if (!user) return;
+    await secureStorage.setUser(user);
+    set({ user });
   },
 
   async updateTokens(accessToken, refreshToken) {

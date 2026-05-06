@@ -8,24 +8,57 @@ import CustomInput from '@/src/components/ui/CustomInput'
 import Feather from '@expo/vector-icons/Feather';
 import CustomButton from '@/src/components/ui/CustomButton'
 import { StatusBar } from 'expo-status-bar'
+import { useVerifyIdentity } from '../queries';
+import { verifyIdentitySchema } from '../verifyIdentitySchema';
+import Toast from 'react-native-toast-message';
+import LoadingOverlay from '@/src/components/ui/LoadingOverlay';
 
 const idTypes = [
-    { id: 'national_id', label: 'National ID Card' },
-    { id: 'passport', label: 'International Passport' },
-    { id: 'drivers_license', label: "Driver's License" },
+    { id: 'NATIONAL_ID', label: 'National ID Card' },
+    { id: 'INTERNATIONAL_PASSPORT', label: 'International Passport' },
+    { id: 'DRIVERS_LICENSE', label: "Driver's License" },
 ]
 
 const VerifyIdentityScreen = () => {
     const router = useRouter()
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [idNumber, setIdNumber] = useState<string>('')
+    const [errors, setErrors] = useState<Record<string, string>>({})
+    const { mutateAsync: verifyIdentity, isPending } = useVerifyIdentity()
 
-    const handleSubmitIdentity = () => {
-        router.replace('/(auth)/IdentityVerification/IdentityVerificationSuccessScreen');
+    const handleSubmitIdentity = async () => {
+        const result = verifyIdentitySchema.safeParse({ verificationType: selectedId!, verificationId: idNumber })
+        if (!result.success) {
+            const fieldErrors: Record<string, string> = {}
+            for (const issue of result.error.issues) {
+                const key = issue.path[0] as string
+                if (!fieldErrors[key]) fieldErrors[key] = issue.message
+            }
+            setErrors(fieldErrors)
+            return
+        }
+        setErrors({})
+
+        try {
+            await verifyIdentity({ verificationType: selectedId!, verificationId: idNumber })
+            router.replace('/(auth)/IdentityVerification/IdentityVerificationSuccessScreen');
+        } catch (error: any) {
+            
+            const message = error?.response?.data?.message ?? 'Registration failed. Please try again.'
+            
+            Toast.show({
+                type: 'error',
+                text1: 'Registration Error',
+                text2: message,
+                swipeable: true,
+            })
+            setErrors({ general: message })
+        }
     }
 
     return (
         <>
+            <LoadingOverlay isVisible={isPending} />
             <StatusBar style='dark' />
             <SafeAreaView className='flex-1 bg-white'>
                 <ScrollView
@@ -33,7 +66,7 @@ const VerifyIdentityScreen = () => {
                     contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 32, paddingTop: 40, paddingBottom: 40 }}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View className='h-12 w-12 mb-6'>
+                    <View className='w-12 h-12 mb-6'>
                         <Image
                             source={require('@/assets/images/vector_shield.jpg')}
                             style={{ width: '100%', height: '100%' }}
@@ -69,12 +102,13 @@ const VerifyIdentityScreen = () => {
                             label="ID Number"
                             value={idNumber}
                             setValue={setIdNumber}
+                            error={errors?.verificationId}
                             placeholder='Enter ID Number'
                             keyboardType='numeric'
                             />
                     </View>
 
-                    <View className='flex-row items-start w-full p-3 bg-light rounded-lg gap-x-3'>
+                    <View className='flex-row items-start w-full p-3 rounded-lg bg-light gap-x-3'>
                         <Feather name="info" size={16} />
 
                         <Text className={`flex-1 text-secondary font-normal font-inter leading-relaxed ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>

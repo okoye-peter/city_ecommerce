@@ -5,11 +5,13 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import hpp from 'hpp';
+import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env';
 import { globalLimiter } from './middlewares/rateLimiter.middleware';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 import { logger } from './utils/logger';
 import routes from './routes';
+import { swaggerSpec } from './config/swagger';
 
 const app = express();
 
@@ -59,6 +61,11 @@ app.use(globalLimiter);
 
 // ─── Trust Proxy (for reverse proxy / load balancer) ─────────────────────────
 app.set('trust proxy', 1);
+
+// ─── Swagger UI ───────────────────────────────────────────────────────────────
+if (env.NODE_ENV !== 'production') {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/v1', routes);

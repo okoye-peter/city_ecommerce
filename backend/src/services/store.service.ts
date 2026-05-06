@@ -1,35 +1,36 @@
 import { prisma } from "@/config/database";
 import type { CreateStoreSchemaType } from "../validators/store.validator";
 import type { CreateProductSchemaType } from "@/validators/product.validator";
+import { ApiError } from "@/utils/ApiError";
 export const createStore = async (data: CreateStoreSchemaType, user: { id: string }) => {
     const { name, imageUrl, description, marketId, categoryIds, products, bank } = data;
 
-    const validStoreCategoryIds = await prisma.category.count({
-        where: {
-            id: {in: (categoryIds || []) }
+    const uniqueStoreCategoryIds = [...new Set(categoryIds || [])];
+    if (uniqueStoreCategoryIds.length > 0) {
+        const validStoreCategoryIds = await prisma.category.count({
+            where: { id: { in: uniqueStoreCategoryIds } },
+        });
+        if (validStoreCategoryIds !== uniqueStoreCategoryIds.length) {
+            throw ApiError.badRequest("invalid store categories selected");
         }
-    })
-
-    if(categoryIds && validStoreCategoryIds !== categoryIds.length) {
-        throw new Error("invalid store categories selected");
     }
 
     if(await prisma.market.count({ where: { id: marketId } }) === 0) {
-        throw new Error("invalid market selected");
+        throw ApiError.badRequest("invalid market selected");
     }
 
     if(await prisma.bank.count({ where: { id: bank.bankId } }) == 0) {
-        throw new Error("invalid bank selected");
+        throw ApiError.badRequest("invalid bank selected");
     }
 
-    const validProductCategories = await prisma.category.count({
-        where: {
-            id: { in: products?.map((p) => p.categoryId) || [] }
+    const uniqueProductCategoryIds = [...new Set(products?.map((p) => p.categoryId) || [])];
+    if (products && products.length > 0) {
+        const validProductCategories = await prisma.category.count({
+            where: { id: { in: uniqueProductCategoryIds } },
+        });
+        if (validProductCategories !== uniqueProductCategoryIds.length) {
+            throw ApiError.badRequest("invalid product categories selected");
         }
-    });
-
-    if(products && validProductCategories !== products.length) {
-        throw new Error("invalid product categories selected");
     }
 
 
@@ -43,7 +44,7 @@ export const createStore = async (data: CreateStoreSchemaType, user: { id: strin
                 description,
                 marketId,
                 ownerId: parseInt(user.id),
-                categories: categoryIds ? { connect: categoryIds.map((id: number) => ({ id })) } : undefined,
+                categories: categoryIds ? { create: categoryIds.map((id: number) => ({ categoryId: id })) } : undefined,
             },
         });
 

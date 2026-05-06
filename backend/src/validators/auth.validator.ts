@@ -23,6 +23,7 @@ export const registerSchema = z.object({
       email: z.string().email().toLowerCase().trim(),
       password: strongPassword,
       passwordConfirmation: z.string().min(1, "Please confirm your password"),
+      role: z.enum(['BUYER', 'SELLER']).default('BUYER'),
     })
     .refine((d) => d.password === d.passwordConfirmation, {
       message: "Passwords do not match",

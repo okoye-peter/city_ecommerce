@@ -59,6 +59,7 @@ export async function register(input: {
   lastName: string;
   email: string;
   password: string;
+  role?: Role;
 }) {
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
 
@@ -78,6 +79,7 @@ export async function register(input: {
       lastName: input.lastName,
       email: input.email,
       password: hashed,
+      role: input.role ?? Role.BUYER,
       emailVerifyOtp: await hashOtp(otp),
       emailVerifyOtpExpiry: new Date(Date.now() + OTP_TTL_MS),
     },
@@ -139,9 +141,32 @@ export async function resendVerification(email: string) {
 }
 
 export async function login(input: { email: string; password: string }) {
-  const user = await prisma.user.findUnique({ where: { email: input.email } });
+  const user = await prisma.user.findUnique({ 
+    where: { email: input.email },
+    select: {
+      id: true,
+      email: true,
+      password: true,
+      googleId: true,
+      firstName: true,
+      lastName: true,
+      avatar: true,
+      isOnline: true,
+      role: true,
+      verificationType: true,
+      verificationId: true,
+      isVerified: true,
+      isActive: true,
+      lastLoginAt: true,
+      createdAt: true,
+      store: {
+        select: { id: true },
+      },
+    },
 
-  if (!user || !user.isActive) {
+});
+
+  if (!user) {
     throw ApiError.unauthorized('Invalid email or password.');
   }
 
@@ -174,8 +199,8 @@ export async function login(input: { email: string; password: string }) {
   }
 
   const tokens = await issueTokens(user.id.toString(), user.email, user.role);
-  const { password: _, refreshToken: __, emailVerifyOtp: ___, emailVerifyOtpExpiry: ____, passwordResetOtp: _____, passwordResetOtpExpiry: ______, ...safeUser } = user;
-  return { user: safeUser, ...tokens };
+  const { password: _, store, ...safeUser } = user;
+  return { user: { ...safeUser, storeCount: store ? 1 : 0 }, ...tokens };
 }
 
 export async function forgotPassword(email: string) {
@@ -315,24 +340,4 @@ export async function logout(userId: string) {
     where: { id: BigInt(userId) },
     data: { refreshToken: null },
   });
-}
-
-export async function getProfile(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: BigInt(userId) },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      avatar: true,
-      role: true,
-      isVerified: true,
-      lastLoginAt: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-  if (!user) throw ApiError.notFound('User not found.');
-  return user;
 }

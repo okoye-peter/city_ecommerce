@@ -56,7 +56,3 @@ export const logout = catchAsync(async (req: Request, res: Response) => {
   ApiResponse.noContent(res);
 });
 
-export const getProfile = catchAsync(async (req: Request, res: Response) => {
-  const user = await authService.getProfile(req.user!.id);
-  ApiResponse.success(res, user, 'Profile retrieved.');
-});

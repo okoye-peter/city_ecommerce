@@ -29,6 +29,11 @@ const envSchema = z.object({
   AUTH_RATE_LIMIT_MAX: z.string().default('10').transform(Number),
   BCRYPT_SALT_ROUNDS: z.string().default('12').transform(Number),
   COOKIE_SECRET: z.string().min(32),
+  ENCRYPTION_KEY: z.string().length(32, 'ENCRYPTION_KEY must be exactly 32 characters'),
+
+  CLOUDINARY_CLOUD_NAME: z.string().min(1),
+  CLOUDINARY_API_KEY: z.string().min(1),
+  CLOUDINARY_API_SECRET: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(process.env);

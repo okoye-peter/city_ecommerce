@@ -17,22 +17,15 @@ import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import CustomButton from '@/src/components/ui/CustomButton';
+import { useGetCategories } from '@/src/hooks/useCategory';
 
 interface Product {
     name: string;
     price: number;
     description: string;
     image: string;
-    category: string;
+    categoryId: string;
 }
-
-const categories = [
-    { label: 'Electronics', id: 'electronics' },
-    { label: 'Fashion', id: 'fashion' },
-    { label: 'Home Decor', id: 'home_decor' },
-    { label: 'Beauty', id: 'beauty' },
-    { label: 'Food & Groceries', id: 'food' },
-]
 
 interface Props {
     onAddProduct: (product: Product) => void;
@@ -46,6 +39,8 @@ const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduc
     const [category, setCategory] = useState<string | null>(null);
 
     const localRef = useRef<BottomSheetModal>(null);
+
+    const { categories, loading: categoryIsLoading, error: categoryError, refetch: refetchCategories } = useGetCategories();
 
     useImperativeHandle(ref, () => localRef.current!);
 
@@ -90,7 +85,7 @@ const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduc
             price: parseFloat(price),
             description,
             image: image || '',
-            category: category || '',
+            categoryId: category || '',
         });
         handleClose();
         setImage(null);
@@ -100,7 +95,7 @@ const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduc
         setCategory(null);
     }
 
-    const isFormValid = !!name && !!price && !!category;
+    const isFormValid = !!name && !!price && !!category && !!image;
 
     return (
         <CustomBottomSheet
@@ -110,10 +105,10 @@ const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduc
             index={1}
             backgroundStyle={{ borderRadius: 24 }}
         >
-            <View className="flex-1 relative">
+            <View className="relative flex-1">
                 <Pressable
                     onPress={() => localRef.current?.dismiss()}
-                    className="absolute right-4 top-4 z-50 border bg-light border-border rounded-full p-2 "
+                    className="absolute z-50 p-2 border rounded-full right-4 top-4 bg-light border-border "
                     style={{ elevation: 5 }}
                 >
                     <AntDesign name="close" size={14} color="black" />
@@ -128,7 +123,7 @@ const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduc
                                 <>
                                     <Image source={{ uri: image }} style={{ width: '100%', height: '100%' }} />
                                     <Pressable className='absolute inset-0 items-center justify-center' onPress={() => setImage(null)}>
-                                        <View className='bg-light rounded-full p-2'>
+                                        <View className='p-2 rounded-full bg-light'>
                                             <AntDesign name="close" size={16} color="var(--color-body)" />
                                         </View>
                                     </Pressable>
@@ -168,14 +163,23 @@ const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduc
                             placeholder="Brief description..."
                             value={description}
                             setValue={setDescription}
-                            numberOfLines={3}
+                            numberOfLines={5}
                             isBottomSheet={true}
                         />
+
+                        {categoryError && (
+                            <View className='flex-row items-center justify-between px-1 py-3 mb-1 border border-red-200 bg-red-50 rounded-xl'>
+                                <Text className='flex-1 ml-3 text-sm text-red-600'>Failed to load categories.</Text>
+                                <Pressable onPress={refetchCategories}>
+                                    <Text className='mr-3 text-sm font-semibold text-red-600'>Retry</Text>
+                                </Pressable>
+                            </View>
+                        )}
 
                         <BottomSheetDropdown
                             label="Category"
                             placeholder="Select a category"
-                            data={categories}
+                            data={(!categoryError && !categoryIsLoading ? categories : []).map(c => ({ label: c.name, id: c.id }))}
                             value={category}
                             onChange={(item) => {
                                 if ('id' in item) setCategory(String(item.id));

@@ -11,8 +11,10 @@ export type OrderStatus =
 export type TransactionType = 'credit' | 'debit';
 
 export interface Bank {
-    id: string;
-    label: string;
+    id: bigint;
+    name: string;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface Product {
@@ -37,4 +39,18 @@ export interface Transaction {
     type: TransactionType;
     description: string;
     createdAt: string;
+}
+
+export interface Category {
+    id: string;
+    name: string;
+    [key: string]: unknown;
+}
+
+export interface Market {
+    id: string;
+    name: string;
+    description: string;
+    createdAt: Date;
+    
 }

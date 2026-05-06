@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-    StyleSheet,
     Text,
     View,
     TouchableOpacity,
@@ -10,8 +10,8 @@ import {
     BottomSheetModal,
     BottomSheetFlatList,
     BottomSheetTextInput,
+    BottomSheetBackdrop,
 } from '@gorhom/bottom-sheet';
-import CustomBottomSheet from './CustomBottomSheet';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Animated, {
     useAnimatedStyle,
@@ -40,6 +40,7 @@ const BottomSheetDropdown = ({
     keyField = 'id',
     labelField = 'label',
 }: Props) => {
+    const { bottom: bottomInset } = useSafeAreaInsets();
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -84,7 +85,7 @@ const BottomSheetDropdown = ({
     });
 
     return (
-        <View className="mb-4 w-full">
+        <View className="w-full mb-4">
             {label && (
                 <Text className={`mb-2 font-inter-semibold text-body ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>
                     {label}
@@ -111,15 +112,30 @@ const BottomSheetDropdown = ({
                 </Animated.View>
             </TouchableOpacity>
 
-            <CustomBottomSheet
+            <BottomSheetModal
                 ref={bottomSheetModalRef}
                 index={0}
                 snapPoints={snapPoints}
+                enableDynamicSizing={false}
                 onDismiss={handleDismiss}
+                backdropComponent={(props) => (
+                    <BottomSheetBackdrop
+                        {...props}
+                        appearsOnIndex={0}
+                        disappearsOnIndex={-1}
+                        opacity={0.5}
+                    />
+                )}
+                handleIndicatorStyle={{ backgroundColor: '#D9D9D9', width: 40 }}
+                keyboardBehavior="extend"
+                keyboardBlurBehavior="restore"
+                android_keyboardInputMode="adjustResize"
             >
-                <View className="flex-1 px-4 pt-2">
-                    {searchable && (
-                        <View className="mb-4 h-12 flex-row items-center rounded-lg bg-light px-3">
+                <BottomSheetFlatList
+                    data={filteredData}
+                    keyExtractor={(item, index) => item[keyField]?.toString() || index.toString()}
+                    ListHeaderComponent={searchable ? (
+                        <View className="flex-row items-center h-12 px-3 mb-4 mx-4 mt-2 rounded-lg bg-light">
                             <MaterialIcons name="search" size={20} color="#757575" />
                             <BottomSheetTextInput
                                 className="ml-2 flex-1 font-inter text-[15px] text-body"
@@ -134,55 +150,44 @@ const BottomSheetDropdown = ({
                                 </TouchableOpacity>
                             )}
                         </View>
-                    )}
-
-                    <BottomSheetFlatList
-                        data={filteredData}
-                        keyExtractor={(item, index) => item[keyField]?.toString() || index.toString()}
-                        renderItem={({ item }) => {
-                            const isSelected = item[keyField] === value;
-                            return (
-                                <TouchableOpacity
-                                    className={`mb-1 flex-row items-center justify-between rounded-lg px-3 py-3.5 ${isSelected ? 'bg-primary/5' : ''
-                                        }`}
-                                    onPress={() => handleSelectItem(item)}
-                                >
-                                    <Text
-                                        className={`font-inter text-[15px] ${isSelected
-                                                ? 'font-inter-semibold text-primary'
-                                                : 'text-body'
-                                            }`}
-                                    >
-                                        {item[labelField]}
-                                    </Text>
-                                    {isSelected && (
-                                        <MaterialIcons name="check" size={20} color="#2C2C2C" />
-                                    )}
-                                </TouchableOpacity>
-                            );
-                        }}
-                        contentContainerStyle={styles.listContent}
-                        ListEmptyComponent={() => (
-                            <Animated.View
-                                entering={FadeIn}
-                                className="items-center pt-10"
+                    ) : null}
+                    renderItem={({ item }) => {
+                        const isSelected = item[keyField] === value;
+                        return (
+                            <TouchableOpacity
+                                className={`mb-1 flex-row items-center justify-between rounded-lg px-3 py-3.5 mx-4 ${isSelected ? 'bg-primary/5' : ''}`}
+                                onPress={() => handleSelectItem(item)}
                             >
-                                <Text className="font-inter text-sm text-secondary">
-                                    No items found
+                                <Text
+                                    className={`font-inter text-[15px] ${isSelected
+                                            ? 'font-inter-semibold text-primary'
+                                            : 'text-body'
+                                        }`}
+                                >
+                                    {item[labelField]}
                                 </Text>
-                            </Animated.View>
-                        )}
-                    />
-                </View>
-            </CustomBottomSheet>
+                                {isSelected && (
+                                    <MaterialIcons name="check" size={20} color="#2C2C2C" />
+                                )}
+                            </TouchableOpacity>
+                        );
+                    }}
+                    contentContainerStyle={{ paddingBottom: bottomInset + 24 }}
+                    ListEmptyComponent={() => (
+                        <Animated.View
+                            entering={FadeIn}
+                            className="items-center pt-10"
+                        >
+                            <Text className="text-sm font-inter text-secondary">
+                                No items found
+                            </Text>
+                        </Animated.View>
+                    )}
+                />
+            </BottomSheetModal>
         </View>
     );
 };
 
 export default BottomSheetDropdown;
 
-const styles = StyleSheet.create({
-    listContent: {
-        paddingBottom: 40,
-    },
-});
