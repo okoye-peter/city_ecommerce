@@ -1,0 +1,131 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+# Cancel in-progress runs for the same PR when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────
+  # BUYERS APP
+  # ─────────────────────────────────────────────
+  buyers-lint:
+    name: Buyers — Lint & Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: buyers
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: buyers/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint + Prettier check
+        run: npm run lint
+
+  buyers-typecheck:
+    name: Buyers — TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: buyers
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: buyers/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+  # ─────────────────────────────────────────────
+  # SELLERS APP
+  # ─────────────────────────────────────────────
+  sellers-lint:
+    name: Sellers — Lint & Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sellers
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: sellers/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint + Prettier check
+        run: npm run lint
+
+  sellers-typecheck:
+    name: Sellers — TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sellers
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: sellers/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+  # ─────────────────────────────────────────────
+  # GATE — required by branch protection rules
+  # ─────────────────────────────────────────────
+  all-checks-passed:
+    name: All Checks Passed
+    needs: [buyers-lint, buyers-typecheck, sellers-lint, sellers-typecheck]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Verify all jobs succeeded
+        run: |
+          results=(
+            "${{ needs.buyers-lint.result }}"
+            "${{ needs.buyers-typecheck.result }}"
+            "${{ needs.sellers-lint.result }}"
+            "${{ needs.sellers-typecheck.result }}"
+          )
+          failed=0
+          for result in "${results[@]}"; do
+            if [[ "$result" != "success" ]]; then
+              failed=1
+            fi
+          done
+          if [[ $failed -eq 1 ]]; then
+            echo "One or more checks failed. Review the job logs above."
+            exit 1
+          fi
+          echo "All checks passed — safe to merge."
