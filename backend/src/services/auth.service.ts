@@ -74,19 +74,25 @@ export async function register(input: {
   const hashed = await bcrypt.hash(input.password, env.BCRYPT_SALT_ROUNDS);
   const otp = generateOtp();
 
-  const user = await prisma.user.create({
-    data: {
-      firstName: input.firstName,
-      lastName: input.lastName,
-      email: input.email,
-      password: hashed,
-      role: input.role ?? Role.BUYER,
-      emailVerifyOtp: await hashOtp(otp),
-      emailVerifyOtpExpiry: new Date(Date.now() + OTP_TTL_MS),
-    },
+  const user = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        password: hashed,
+        role: input.role ?? Role.BUYER,
+        emailVerifyOtp: await hashOtp(otp),
+        emailVerifyOtpExpiry: new Date(Date.now() + OTP_TTL_MS),
+      },
+    });
+
+    if (user.role === Role.BUYER) await createUserWallet(user, tx);
+
+    return user;
   });
 
-  if(user.role === Role.BUYER) await createUserWallet(user);
+  await sendVerificationEmail(user.email, user.firstName, otp);
 
   return {
     message: 'Registration successful.',
