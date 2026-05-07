@@ -298,7 +298,7 @@ export async function googleAuth(idToken: string) {
         data: { googleId, avatar: avatar ?? user.avatar, isVerified: true },
       });
     }
-    if (!user.isActive) throw ApiError.forbidden('Account is deactivated.');
+    // if (!user.isActive) throw ApiError.forbidden('Account is deactivated.');
   } else {
     user = await prisma.user.create({
       data: { email, googleId, firstName, lastName, avatar, isVerified: true },
