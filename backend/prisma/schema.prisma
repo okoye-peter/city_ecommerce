@@ -1,0 +1,321 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model User {
+    id                     BigInt            @id @default(autoincrement())
+    email                  String            @unique
+    password               String?
+    googleId               String?           @unique
+    firstName              String
+    lastName               String
+    avatar                 String?
+    isOnline               Boolean           @default(false)
+    role                   Role              @default(BUYER)
+    verificationType       VerificationType?
+    verificationId         String?
+    isVerified             Boolean           @default(false)
+    isActive               Boolean           @default(true)
+    refreshToken           String?
+    lastLoginAt            DateTime?
+    emailVerifyOtp         String?
+    emailVerifyOtpExpiry   DateTime?
+    passwordResetOtp       String?
+    passwordResetOtpExpiry DateTime?
+    createdAt              DateTime          @default(now())
+    updatedAt              DateTime          @updatedAt
+
+    store      Store?
+    userBanks  UserBank[]
+    orders     OrderGroup[]
+    wallet     UserWallet?
+
+    @@index([email])
+    @@index([googleId])
+    @@map("users")
+}
+
+model Category {
+    id          BigInt   @id @default(autoincrement())
+    name        String   @unique
+    description String?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    stores   CategoryStorePivot[]
+    products Product[]
+
+    @@map("categories")
+}
+
+model Market {
+    id          BigInt   @id @default(autoincrement())
+    name        String   @unique
+    description String?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    stores Store[]
+
+    @@map("markets")
+}
+
+model Store {
+    id          BigInt   @id @default(autoincrement())
+    name        String
+    description String?
+    imageUrl    String?
+    ownerId     BigInt   @unique
+    marketId    BigInt?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    user       User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+    categories CategoryStorePivot[]
+    market     Market?              @relation(fields: [marketId], references: [id], onDelete: SetNull)
+    products   Product[]
+    wallet     SellerWallet?
+
+    @@map("stores")
+}
+
+model CategoryStorePivot {
+    id         BigInt   @id @default(autoincrement())
+    categoryId BigInt
+    storeId    BigInt
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+
+    category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    store    Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+    @@unique([categoryId, storeId])
+    @@map("category_store_pivot")
+}
+
+model Product {
+    id          BigInt   @id @default(autoincrement())
+    name        String
+    description String?
+    price       Float
+    imageUrl    String?
+    storeId     BigInt
+    isAvailable Boolean  @default(true)
+    categoryId  BigInt?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    store    Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+    category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+    orders   Order[]
+
+    @@map("products")
+}
+
+model Bank {
+    id                 BigInt   @id @default(autoincrement())
+    name               String   @unique
+    createdAt          DateTime @default(now())
+    updatedAt          DateTime @updatedAt
+
+    userBanks UserBank[]
+
+    @@map("banks")
+}
+
+model UserBank {
+    id            BigInt   @id @default(autoincrement())
+    userId        BigInt
+    bankId        BigInt
+    accountNumber String
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+    bank Bank @relation(fields: [bankId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, bankId])
+    @@map("user_banks")
+}
+
+model OrderPayments {
+    id           BigInt   @id @default(autoincrement())
+    orderGroupId BigInt
+    amount       Float
+    reference    String   @unique
+    status       String
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    orderGroup OrderGroup @relation(fields: [orderGroupId], references: [id], onDelete: Cascade)
+
+    @@map("payments")
+}
+
+model OrderGroup {
+    id          BigInt           @id @default(autoincrement())
+    refNo       String           @unique
+    status      OrderGroupStatus @default(PENDING)
+    buyerId     BigInt
+    totalAmount Float
+    createdAt   DateTime         @default(now())
+    updatedAt   DateTime         @updatedAt
+
+    buyer             User               @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+    orders            Order[]
+    payments          OrderPayments[]
+    walletTransaction WalletTransaction?
+
+    @@map("order_groups")
+}
+
+model Order {
+    id           BigInt      @id @default(autoincrement())
+    orderGroupId BigInt
+    productId    BigInt
+    quantity     Int
+    unitPrice    Float
+    totalPrice   Float
+    status       OrderStatus @default(PENDING)
+    deliveredAt  DateTime?   // set when status → DELIVERED; 72h clock starts here
+    createdAt    DateTime    @default(now())
+    updatedAt    DateTime    @updatedAt
+
+    orderGroup   OrderGroup         @relation(fields: [orderGroupId], references: [id], onDelete: Cascade)
+    product      Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+    escrowEntry  SellerEscrowEntry?
+    refund       WalletTransaction? // populated only when status → DECLINED
+
+    @@map("orders")
+}
+
+// ─── Seller wallet ────────────────────────────────────────────────────────────
+
+model SellerWallet {
+    id               BigInt   @id @default(autoincrement())
+    storeId          BigInt   @unique
+    escrowBalance    Float    @default(0) // delivered but 72h not yet passed
+    availableBalance Float    @default(0) // ready to withdraw
+    totalEarnings    Float    @default(0) // lifetime figure
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+
+    store         Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+    escrowEntries SellerEscrowEntry[]
+    withdrawals   Withdrawal[]
+
+    @@map("seller_wallets")
+}
+
+model SellerEscrowEntry {
+    id          BigInt       @id @default(autoincrement())
+    walletId    BigInt
+    orderId     BigInt       @unique  // DB-level duplicate guard — one entry per order
+    amount      Float
+    status      EscrowStatus @default(HELD)
+    deliveredAt DateTime     // copied from Order.deliveredAt; 72h is measured from here
+    releasedAt  DateTime?    // set by the background job when funds move to availableBalance
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+
+    wallet SellerWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+    order  Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+    @@map("seller_escrow_entries")
+}
+
+model Withdrawal {
+    id        BigInt           @id @default(autoincrement())
+    walletId  BigInt
+    amount    Float
+    status    WithdrawalStatus @default(PENDING)
+    createdAt DateTime         @default(now())
+    updatedAt DateTime         @updatedAt
+
+    wallet SellerWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+    @@map("withdrawals")
+}
+
+// ─── Buyer wallet (store credit for refunds on declined orders) ───────────────
+
+model UserWallet {
+    id            BigInt   @id @default(autoincrement())
+    userId        BigInt   @unique
+    creditBalance Float    @default(0)
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+    transactions WalletTransaction[]
+
+    @@map("user_wallets")
+}
+
+model WalletTransaction {
+    id           BigInt                @id @default(autoincrement())
+    walletId     BigInt
+    orderId      BigInt?               @unique // REFUND — one refund per declined order
+    orderGroupId BigInt?               @unique // PURCHASE_DEDUCTION — one deduction per checkout
+    amount       Float
+    type         WalletTransactionType
+    createdAt    DateTime              @default(now())
+
+    wallet     UserWallet  @relation(fields: [walletId], references: [id], onDelete: Cascade)
+    order      Order?      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    orderGroup OrderGroup? @relation(fields: [orderGroupId], references: [id], onDelete: Cascade)
+
+    @@map("wallet_transactions")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+    BUYER
+    SELLER
+    ADMIN
+}
+
+enum VerificationType {
+    NATIONAL_ID
+    INTERNATIONAL_PASSPORT
+    DRIVERS_LICENSE
+}
+
+enum OrderGroupStatus {
+    PENDING
+    PAYMENT_CONFIRMED
+    SHIPPED
+    DELIVERED
+    CANCELLED
+}
+
+enum OrderStatus {
+    PENDING
+    CONFIRMED
+    READY_FOR_SHIPMENT
+    SHIPPED
+    DELIVERED
+    DECLINED
+}
+
+enum EscrowStatus {
+    HELD      // delivered, 72h not yet passed
+    RELEASED  // moved to availableBalance by the background job
+}
+
+enum WithdrawalStatus {
+    PENDING
+    PROCESSING
+    COMPLETED
+    FAILED
+}
+
+enum WalletTransactionType {
+    REFUND             // credited to buyer when seller declines a paid order
+    PURCHASE_DEDUCTION // debited when buyer uses credit on a new order
+}
