@@ -13,7 +13,7 @@ const PhoneVerificationModal = ({ isVisible, onClose, verifyPhoneNumber }: { isV
         >
             <View>
                 <Text className={`text-body text-base font-normal ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>
-                    We've sent a One‑Time Password (OTP) to your registered mobile number. Type it below to secure your account and continue managing your store.
+                    {"We've sent a One‑Time Password (OTP) to your registered mobile number. Type it below to secure your account and continue managing your store."}
                 </Text>
 
                 <OtpInput

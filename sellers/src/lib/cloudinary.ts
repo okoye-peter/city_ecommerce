@@ -47,8 +47,7 @@ export async function uploadToCloudinary(fileUri: string, folder: CloudinaryFold
     try {
         response = await fetch(
             `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { method: 'POST', body: formData as any, signal: controller.signal as any },
+                { method: 'POST', body: formData as any, signal: controller.signal as any },
         );
     } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') {

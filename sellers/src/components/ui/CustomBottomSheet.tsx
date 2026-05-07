@@ -1,5 +1,5 @@
 import React, { useCallback, forwardRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetModalProps, BottomSheetView } from '@gorhom/bottom-sheet';
 
 interface CustomBottomSheetProps extends Omit<BottomSheetModalProps, 'ref' | 'children'> {

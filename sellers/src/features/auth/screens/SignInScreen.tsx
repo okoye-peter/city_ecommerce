@@ -61,7 +61,7 @@ const CarouselImage = ({ source, isActive }: { source: any; isActive: boolean })
             duration: 700,
             easing: Easing.out(Easing.ease),
         })
-    }, [isActive])
+    }, [isActive, opacity])
 
     const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }))
 
@@ -78,7 +78,7 @@ const Dot = ({ isActive, onPress }: { isActive: boolean; onPress: () => void }) 
 
     useEffect(() => {
         animWidth.value = withTiming(isActive ? 24 : 7, { duration: 300 })
-    }, [isActive])
+    }, [isActive, animWidth])
 
     const animStyle = useAnimatedStyle(() => ({ width: animWidth.value }))
 
@@ -129,6 +129,7 @@ const SignIn = () => {
             animateToSlide((activeSlide + 1) % SLIDES.length)
         }, 3600)
         return () => clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSlide])
 
     const textAnimStyle = useAnimatedStyle(() => ({

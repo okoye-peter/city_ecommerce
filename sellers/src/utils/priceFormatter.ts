@@ -53,7 +53,7 @@ export const formatPrice = (
       minimumFractionDigits: decimalPlaces,
       maximumFractionDigits: decimalPlaces,
     }).format(numericAmount);
-  } catch (error) {
+  } catch {
     // Fallback for environments where Intl might not be fully supported or locale is missing
     const formatted = numericAmount.toFixed(decimalPlaces).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     

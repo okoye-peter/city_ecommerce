@@ -36,11 +36,11 @@ const EarningSummaryCard = ({ trend = 'up', percentage = 12 }: { trend?: 'up' | 
 
     return (
         <View className='bg-light border-border rounded-lg p-4' style={styles.card}>
-            <Text className={`font-normal text-secondary mb-2 ${Platform.OS == 'ios' ? 'text-sm' : 'text-base'}`}>Today&apos;s Earnings</Text>
+            <Text className={`font-normal text-secondary mb-2 ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>Today&apos;s Earnings</Text>
 
             <View className='flex-row items-end justify-between mt-4'>
                 <View>
-                    <Text className={`font-semibold text-primary mb-1 ${Platform.OS == 'ios' ? 'text-2xl' : 'text-3xl'}`}>
+                    <Text className={`font-semibold text-primary mb-1 ${Platform.OS === 'ios' ? 'text-2xl' : 'text-3xl'}`}>
                         {formatPrice(117000)}
                     </Text>
 

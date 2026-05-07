@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Animated, { 
     useAnimatedStyle, 
     useSharedValue, 
@@ -33,7 +33,7 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ isVisible }) => {
             rotation.value = 0;
             scale.value = 1;
         }
-    }, [isVisible]);
+    }, [isVisible, rotation, scale]);
 
     const animatedRotation = useAnimatedStyle(() => {
         return {

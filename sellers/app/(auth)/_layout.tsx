@@ -1,5 +1,5 @@
 import React from 'react'
-import { Stack, Redirect, useSegments, useRouter } from 'expo-router'
+import { Stack, Redirect, useSegments } from 'expo-router'
 import { useAuthStore, selectUser } from '@/src/features/auth/store/authStore'
 
 

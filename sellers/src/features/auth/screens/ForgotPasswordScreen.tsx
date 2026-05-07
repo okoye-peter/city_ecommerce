@@ -52,7 +52,7 @@ const StepDot = ({ isActive }: { isActive: boolean }) => {
 
     useEffect(() => {
         animWidth.value = withTiming(isActive ? 24 : 8, { duration: 300 })
-    }, [isActive])
+    }, [isActive, animWidth])
 
     const animStyle = useAnimatedStyle(() => ({ width: animWidth.value }))
 

@@ -25,7 +25,7 @@ const Skeleton: React.FC<SkeletonProps> = ({ width, height, borderRadius = 4, st
             -1,
             false
         );
-    }, []);
+    }, [translateX]);
 
     const animatedStyle = useAnimatedStyle(() => {
         const x = interpolate(translateX.value, [-1, 1], [-100, 200]);

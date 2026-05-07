@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Platform, useWindowDimensions, Pressable } from 'react-native';
+import { StyleSheet, Text, View, Platform, Pressable } from 'react-native';
 import { Dropdown, MultiSelect } from 'react-native-element-dropdown';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Feather from '@expo/vector-icons/Feather';
@@ -32,7 +32,6 @@ const CustomDropdown = ({
     containerStyle = '',
     dropdownPosition = 'auto',
 }: Props) => {
-    const { height } = useWindowDimensions();
     const [isFocused, setIsFocused] = useState(false);
 
     // Smooth focus animation for the border

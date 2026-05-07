@@ -240,4 +240,6 @@ const ShopForm = forwardRef<ShopFormHandle, { markets: Option[], categories: Opt
     }
 );
 
+ShopForm.displayName = 'ShopForm';
+
 export default ShopForm;

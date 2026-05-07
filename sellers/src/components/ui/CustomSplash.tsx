@@ -21,7 +21,7 @@ const CustomSplash = () => {
 
         textOpacity.value = withDelay(500, withTiming(1, { duration: 800 }))
         textTranslateY.value = withDelay(500, withTiming(0, { duration: 800, easing: Easing.out(Easing.back(1)) }))
-    }, [])
+    }, [logoScale, logoOpacity, textOpacity, textTranslateY])
 
     const logoStyle = useAnimatedStyle(() => ({
         opacity: logoOpacity.value,

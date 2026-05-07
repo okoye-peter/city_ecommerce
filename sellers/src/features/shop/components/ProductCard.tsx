@@ -2,7 +2,7 @@ import { View, Text, Platform, Pressable } from 'react-native'
 import React, { useState } from 'react'
 import { Image } from 'expo-image'
 import { formatPrice } from '@/src/utils/priceFormatter'
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 import Feather from '@expo/vector-icons/Feather';
 import Skeleton from '@/src/components/ui/Skeleton';
 import EditProductBottomSheet from './EditOrAddProductBottomSheet';

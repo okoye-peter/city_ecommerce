@@ -51,7 +51,7 @@ const PendingOrderBottomSheet = () => {
             duration: 1000,
             easing: Easing.linear
         });
-    }, [timeLeft]);
+    }, [timeLeft, progress]);
 
     const animatedProps = useAnimatedProps(() => ({
         strokeDashoffset: circumference * (1 - progress.value),

@@ -14,6 +14,8 @@ import { initStorage } from "@/src/lib/storage";
 import LoadingOverlay from "@/src/components/ui/LoadingOverlay";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
+import { useAuthStore } from '@/src/features/auth/store/authStore';
+import { setSessionExpiredHandler } from '@/src/lib/axios';
 
 // Called once at module load — before any screen mounts.
 // webClientId must be the Web OAuth client (not iOS/Android), because it identifies
@@ -23,8 +25,6 @@ GoogleSignin.configure({
     scopes: ['profile', 'email'],
     offlineAccess: false,
 })
-import { useAuthStore } from '@/src/features/auth/store/authStore';
-import { setSessionExpiredHandler } from '@/src/lib/axios';
 
 const queryClient = new QueryClient();
 

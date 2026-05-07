@@ -5,7 +5,7 @@ import CustomBottomSheet from '@/src/components/ui/CustomBottomSheet';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { formatPrice } from '@/src/utils/priceFormatter';
-import clsx from 'clsx';
+import { clsx } from 'clsx';
 
 
 interface Props {

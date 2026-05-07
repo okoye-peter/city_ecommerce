@@ -106,4 +106,6 @@ const BankForm = forwardRef<BankFormHandle, object>(
     }
 );
 
+BankForm.displayName = 'BankForm';
+
 export default BankForm;

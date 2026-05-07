@@ -24,7 +24,7 @@ const CustomSwitch = ({
 
     useEffect(() => {
         translateX.value = withTiming(value ? 20 : 2, { duration: 250 });
-    }, [value]);
+    }, [value, translateX]);
 
     const animatedTrackStyle = useAnimatedStyle(() => {
         const backgroundColor = interpolateColor(

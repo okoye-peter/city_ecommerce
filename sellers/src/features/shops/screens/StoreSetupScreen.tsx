@@ -28,7 +28,7 @@ import { useGetMarkets } from '@/src/hooks/useMarket';
 import { useGetCategories } from '@/src/hooks/useCategory';
 import { uploadToCloudinary, deleteFromCloudinary } from '@/src/lib/cloudinary';
 import { createStore } from '@/src/services/store.service';
-import { selectUser, useAuthStore, User } from '../../auth/store/authStore';
+import { selectUser, useAuthStore } from '../../auth/store/authStore';
 import { isAxiosError } from 'axios';
 import Toast from 'react-native-toast-message';
 

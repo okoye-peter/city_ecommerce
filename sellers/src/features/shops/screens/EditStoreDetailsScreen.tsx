@@ -2,7 +2,7 @@ import { Pressable, Text, View, ScrollView, Platform, KeyboardAvoidingView } fro
 import React, { useState } from "react"
 import SafeAreaView from "@/src/components/ui/NativeStyledSafeAreaView"
 import { Image } from "expo-image"
-import { Feather, Ionicons } from "@expo/vector-icons"
+import { Feather } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import { LinearGradient } from "expo-linear-gradient"
 import { cssInterop } from "nativewind"

@@ -36,10 +36,6 @@ const categories = [
     { label: 'Category 20', value: 'category20' },
 ]
 
-const stockOptions = [
-    { label: 'In Stock', value: true },
-    { label: 'Out of Stock', value: false },
-];
 
 interface EditProductBottomSheetProps {
     onClose: () => void;

@@ -93,4 +93,6 @@ const ProductForm = forwardRef<ProductFormHandle, object>(
     }
 );
 
+ProductForm.displayName = 'ProductForm';
+
 export default ProductForm;
