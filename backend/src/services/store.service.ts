@@ -2,6 +2,9 @@ import { prisma } from "@/config/database";
 import type { CreateStoreSchemaType } from "../validators/store.validator";
 import type { CreateProductSchemaType } from "@/validators/product.validator";
 import { ApiError } from "@/utils/ApiError";
+import { createUserWallet } from "./wallet.service";
+
+
 export const createStore = async (data: CreateStoreSchemaType, user: { id: string }) => {
     const { name, imageUrl, description, marketId, categoryIds, products, bank } = data;
 
@@ -63,6 +66,14 @@ export const createStore = async (data: CreateStoreSchemaType, user: { id: strin
                 userId: parseInt(user.id),
             },
         });
+
+        const storeOwner = await prisma.user.findFirst({
+            where: {
+                id: BigInt(user.id)
+            }
+        })
+        
+        if(storeOwner) await createUserWallet(storeOwner);
 
         return store;
     });
