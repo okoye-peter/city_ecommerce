@@ -1,8 +1,12 @@
-export type StatusType = 'accepted' | 'ready_for_pickup' | 'pending' | 'picked_up' | 'delivered' | 'cancel';
+import type { StatusType } from '@/src/types';
+
+export type { StatusType } from '@/src/types';
 
 export const statusClass = (status: StatusType | string): { container: string; text: string } => {
     switch (status.trim().toLowerCase()) {
         case 'accepted':
+        case 'processing':
+        case 'payment_confirmed':
             return {
                 container: 'bg-light-gray-2 border-light-gray',
                 text: 'text-gray-accepted',
@@ -18,6 +22,7 @@ export const statusClass = (status: StatusType | string): { container: string; t
                 text: 'text-indigo-dark',
             };
         case 'picked_up':
+        case 'shipped':
             return {
                 container: 'bg-warning-light-2 border-warning-light',
                 text: 'text-warning-dark',
@@ -28,6 +33,8 @@ export const statusClass = (status: StatusType | string): { container: string; t
                 text: 'text-success-dark',
             };
         case 'cancel':
+        case 'cancelled':
+        case 'returned':
             return {
                 container: 'bg-error-light-2 border-error-light',
                 text: 'text-error-dark',

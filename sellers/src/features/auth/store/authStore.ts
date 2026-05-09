@@ -10,6 +10,9 @@
 
 import { create } from 'zustand';
 import { secureStorage } from '@/src/lib/storage';
+import type { User, Store } from '@/src/types';
+
+export type { User, Store } from '@/src/types';
 
 function jwtExpiry(token: string): number | null {
   try {
@@ -28,39 +31,23 @@ function isExpired(token: string): boolean {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  avatar: string;
-  role: 'BUYER' | 'SELLER';
-  verificationType?:
-    | 'NATIONAL_ID'
-    | 'DRIVERS_LICENSE'
-    | 'INTERNATIONAL_PASSPORT';
-  verificationId?: string;
-  isVerified: boolean;
-  isActive: boolean;
-  lastLoginAt: string;
-  createdAt: string;
-  storeCount?: number;
-}
-
 type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
 interface AuthState {
   user: User | null;
+  store: Store | null;
   accessToken: string | null;
   status: AuthStatus;
 
   setSession: (payload: {
     user: User;
+    store?: Store | null;
     accessToken: string;
     refreshToken: string;
   }) => Promise<void>;
 
   setUser: (user: User) => Promise<void>;
+  setStore: (store: Store | null) => Promise<void>;
   updateTokens: (accessToken: string, refreshToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
@@ -69,21 +56,28 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
+  store: null,
   accessToken: null,
   status: 'idle',
 
-  async setSession({ user, accessToken, refreshToken }) {
+  async setSession({ user, store = null, accessToken, refreshToken }) {
     if (refreshToken) await secureStorage.setRefreshToken(refreshToken);
     if (accessToken) await secureStorage.setAccessToken(accessToken);
     if (user) await secureStorage.setUser(user);
+    await secureStorage.setStore(store);
 
-    set({ user, accessToken: accessToken ?? null, status: 'authenticated' });
+    set({ user, store, accessToken: accessToken ?? null, status: 'authenticated' });
   },
 
   async setUser(user: User) {
     if (!user) return;
     await secureStorage.setUser(user);
     set({ user });
+  },
+
+  async setStore(store: Store | null) {
+    await secureStorage.setStore(store);
+    set({ store });
   },
 
   async updateTokens(accessToken, refreshToken) {
@@ -97,6 +91,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     await secureStorage.clearAll();
     set({
       user: null,
+      store: null,
       accessToken: null,
       status: 'unauthenticated',
     });
@@ -113,29 +108,26 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
 
-    // Access token still valid — nothing more to check
+    const store = secureStorage.getStore<Store>();
+
     if (!isExpired(accessToken)) {
-      set({ accessToken, user, status: 'authenticated' });
+      set({ accessToken, user, store, status: 'authenticated' });
       return;
     }
 
-    // Access token expired — check if the refresh token can save the session
     const refreshToken = await secureStorage.getRefreshToken();
     if (!refreshToken || isExpired(refreshToken)) {
-      // Both dead — clear storage and force re-login immediately
       await secureStorage.clearAll();
-      set({ user: null, accessToken: null, status: 'unauthenticated' });
+      set({ user: null, store: null, accessToken: null, status: 'unauthenticated' });
       return;
     }
 
-    // Refresh token still valid — let the Axios interceptor handle the refresh
-    // on the first API call rather than doing it eagerly here
-    set({ accessToken, user, status: 'authenticated' });
+    set({ accessToken, user, store, status: 'authenticated' });
   },
 }));
 
 
 export const selectUser = (s: AuthState) => s.user;
-export const selectIsAuthenticated = (s: AuthState) =>
-  s.status === 'authenticated';
+export const selectStore = (s: AuthState) => s.store;
+export const selectIsAuthenticated = (s: AuthState) => s.status === 'authenticated';
 export const selectAuthStatus = (s: AuthState) => s.status;

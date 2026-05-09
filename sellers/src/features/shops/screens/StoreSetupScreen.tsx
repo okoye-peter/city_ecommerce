@@ -28,13 +28,12 @@ import { useGetMarkets } from '@/src/hooks/useMarket';
 import { useGetCategories } from '@/src/hooks/useCategory';
 import { uploadToCloudinary, deleteFromCloudinary } from '@/src/lib/cloudinary';
 import { createStore } from '@/src/services/store.service';
-import { selectUser, useAuthStore } from '../../auth/store/authStore';
+import { useAuthStore } from '../../auth/store/authStore';
 import { isAxiosError } from 'axios';
 import Toast from 'react-native-toast-message';
 
 const StoreSetupScreen = () => {
-    const user = useAuthStore(selectUser);
-    const updateUser = useAuthStore((s) => s.setUser);
+    const setStore = useAuthStore((s) => s.setStore);
     const router = useRouter();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,7 +101,7 @@ const StoreSetupScreen = () => {
             );
 
             // Submit to API
-            await createStore({
+            const { data: createdStore } = await createStore({
                 name: collectedShopData.shopName,
                 imageUrl: shopImageUrl,
                 description: collectedShopData.shopDescription || undefined,
@@ -113,12 +112,12 @@ const StoreSetupScreen = () => {
                     bankId: Number(bankData.bank),
                     accountNumber: bankData.accountNumber,
                 },
+                openDays: collectedShopData.openDays,
+                openingTime: collectedShopData.openingTime,
+                closingTime: collectedShopData.closingTime,
             });
 
-            // update user
-            if (user) {
-                updateUser({ ...user, storeCount: 1 });
-            }
+            await setStore(createdStore);
 
             router.replace('/(auth)/Shops/StoreSetupSuccessScreen');
         } catch (error: unknown) {
@@ -211,15 +210,19 @@ const StoreSetupScreen = () => {
 
                     {/* content */}
                     <View className="flex-1">
-                        {step === 1 && (
+                        <View style={{ display: step === 1 ? 'flex' : 'none' }}>
                             <ShopForm
                                 ref={shopFormRef}
                                 markets={mappedMarkets}
                                 categories={mappedCategories}
                             />
-                        )}
-                        {step === 2 && <ProductForm ref={productFormRef} />}
-                        {step === 3 && <BankForm ref={bankFormRef} />}
+                        </View>
+                        <View style={{ display: step === 2 ? 'flex' : 'none' }}>
+                            <ProductForm ref={productFormRef} />
+                        </View>
+                        <View style={{ display: step === 3 ? 'flex' : 'none' }}>
+                            <BankForm ref={bankFormRef} />
+                        </View>
                     </View>
                 </ScrollView>
 

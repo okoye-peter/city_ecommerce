@@ -33,19 +33,19 @@ import Toast from 'react-native-toast-message'
 
 const SLIDES = [
     {
-        image: require('@/assets/images/signin/home_screen.jpg'),
+        image: require('@/assets/images/signin/sign_in_1.jpg'),
         icon: 'trending-up' as const,
         title: 'Grow Your Business',
         subtitle: 'List products and reach thousands of local customers in your city.',
     },
     {
-        image: require('@/assets/images/home_screen/offline-shop-icon.jpg'),
+        image: require('@/assets/images/signin/sign_in_2.jpg'),
         icon: 'package' as const,
         title: 'Manage With Ease',
         subtitle: 'Track orders, manage inventory, and monitor earnings in one place.',
     },
     {
-        image: require('@/assets/images/Post by 3000LABELS DIRECT.jpeg'),
+        image: require('@//assets/images/signin/sign_in_3.jpg'),
         icon: 'users' as const,
         title: 'Build Your Brand',
         subtitle: 'Connect with loyal customers and grow your store reputation.',
@@ -197,6 +197,10 @@ const SignIn = () => {
             })
             router.replace('/(auth)/(tabs)/HomeScreen')
         } catch (error: any) {
+            console.log('sign in error', {
+                error,
+                response: error?.response
+            })
             const message = error?.response?.data?.message ?? 'Sign in failed. Please try again.'
             Toast.show({
                 type: 'error',

@@ -6,6 +6,7 @@ import storeRoutes from './store.routes'
 import userRoutes from './user.routes';
 import uploadRoutes from './upload.routes';
 import categoryRoutes from './category.routes';
+import productRoutes from './product.route';
 
 
 const router = Router();
@@ -21,5 +22,6 @@ router.use('/categories', categoryRoutes);
 router.use('/stores', storeRoutes);
 router.use('/users', userRoutes);
 router.use('/uploads', uploadRoutes);
+router.use('/products', productRoutes);
 
 export default router;

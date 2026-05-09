@@ -3,18 +3,8 @@ import React, { useState } from 'react'
 import SafeAreaView from '@/src/components/ui/NativeStyledSafeAreaView'
 import ProductCard from '@/src/features/home/components/ProductCard';
 import { Link } from 'expo-router';
-import { StatusType } from '@/src/utils/statusClass';
+import type { OrderItem, StatusType } from '@/src/types';
 import CustomTab from '@/src/components/ui/CustomTab';
-
-export interface OrderItem {
-    id: number;
-    productImageUrl: string;
-    productName: string;
-    orderTotal: number;
-    orderRef: string;
-    date: string;
-    status: StatusType;
-}
 
 const OrderItems: OrderItem[] = [
     {
@@ -124,7 +114,7 @@ const OrdersScreen = () => {
     });
 
     return (
-        <SafeAreaView className='flex-1 bg-white'>
+        <SafeAreaView edges={['top', 'left', 'right']} className='flex-1 bg-white'>
             <View className="mb-6">
                 <Text className={`text-primary font-Inter-bold mt-6 px-6 ${Platform.OS === 'ios' ? 'text-3xl' : 'text-4xl'}`}>
                     Orders

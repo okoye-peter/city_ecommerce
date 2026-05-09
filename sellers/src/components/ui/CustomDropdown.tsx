@@ -7,7 +7,7 @@ import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated'
 
 interface Props {
     data: {label: string, value: string | number | boolean | null}[];
-    value: any;
+    value: string | string[];
     onChange: (item: any) => void;
     placeholder?: string;
     label?: string;
@@ -17,6 +17,7 @@ interface Props {
     valueField?: string;
     containerStyle?: string;
     dropdownPosition?: 'auto' | 'top' | 'bottom';
+    error?: string
 }
 
 const CustomDropdown = ({
@@ -31,6 +32,7 @@ const CustomDropdown = ({
     valueField = 'value',
     containerStyle = '',
     dropdownPosition = 'auto',
+    error,
 }: Props) => {
     const [isFocused, setIsFocused] = useState(false);
 
@@ -102,7 +104,7 @@ const CustomDropdown = ({
             )}
 
             <Animated.View
-                className="rounded-xl border bg-transparent"
+                className="bg-transparent border rounded-xl"
                 style={[animatedBorderStyle, { minHeight: 44 }]}
             >
                 {isMulti ? (
@@ -110,27 +112,27 @@ const CustomDropdown = ({
                         <MultiSelect
                             {...commonProps}
                             style={styles.dropdown}
-                            placeholder={value && value.length > 0 ? "" : placeholder}
-                            value={value}
+                            placeholder={Array.isArray(value) && value.length > 0 ? "" : placeholder}
+                            value={Array.isArray(value) ? value : []}
                             onChange={onChange}
                             visibleSelectedItem={false}
                         />
-                        {value && value.length > 0 && (
+                        {Array.isArray(value) && value.length > 0 && (
                             <View className="flex-row flex-wrap px-3 pb-3 -mt-10">
-                                {value.map((val: any) => {
+                                {(value as string[]).map((val) => {
                                     const item = data.find(d => d[valueField] === val);
                                     if (!item) return null;
                                     return (
-                                        <View 
-                                            key={val} 
+                                        <View
+                                            key={val}
                                             className="bg-[#F3F4F6] px-3 py-1.5 rounded-xl flex-row items-center mr-2 mt-2"
                                         >
                                             <Text className="font-inter text-sm text-[#1E1E1E] mr-2">
                                                 {item[labelField]}
                                             </Text>
-                                            <Pressable 
+                                            <Pressable
                                                 onPress={() => {
-                                                    const newValue = value.filter((v: any) => v !== val);
+                                                    const newValue = (value as string[]).filter((v) => v !== val);
                                                     onChange(newValue);
                                                 }}
                                                 hitSlop={8}
@@ -153,6 +155,10 @@ const CustomDropdown = ({
                             setIsFocused(false);
                         }}
                     />
+                )}
+
+                {error && (
+                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{error}</Text>
                 )}
             </Animated.View>
         </View>

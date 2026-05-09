@@ -33,7 +33,7 @@ const ProductCard = ({productImageUrl, productName, orderTotal, orderRef, date, 
                 <Text numberOfLines={1} className={`font-normal font-Inter text-primary ${Platform.OS === 'ios' ? 'text-lg' : 'text-xl'}`}>{productName}</Text>
                 <View className='flex-row items-center gap-1 mb-2'>
                     <Text numberOfLines={1} className={`font-normal font-Inter pr-1.5 border-r border-r-border/60 text-secondary ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>Order-{orderRef}</Text>
-                    <Text numberOfLines={1} className={`font-normal font-Inter pl-1.5 text-secondary ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>{format(date, 'do MMM, yyyy')}</Text>
+                    <Text numberOfLines={1} className={`font-normal font-Inter pl-1.5 text-secondary ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>{format(new Date(date), 'do MMM, yyyy')}</Text>
                 </View>
                 <View className='flex-row items-center justify-between'>
                     <Text className={`font-normal font-Inter text-body ${Platform.OS === 'ios' ? 'text-lg' : 'text-xl'}`}>{formatPrice(orderTotal)}</Text>

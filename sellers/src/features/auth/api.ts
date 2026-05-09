@@ -1,36 +1,7 @@
 import api from '@/src/lib/axios'
-import type { User } from './store/authStore'
+import type { User, AuthResponse, ApiResponse, RegisterPayload, RegisterResponse, SignInPayload } from '@/src/types'
 
-export interface AuthTokens {
-    accessToken: string
-    refreshToken: string
-}
-
-export interface AuthResponse extends AuthTokens {
-    user: User
-}
-
-export interface ApiResponse<T> {
-    data: T
-    message: string
-    success: boolean
-}
-
-export interface RegisterPayload {
-    firstName: string
-    lastName: string
-    email: string
-    password: string
-    passwordConfirmation: string
-    role: 'SELLER'
-}
-
-export type RegisterResponse = ApiResponse<{ email: string; message: string }>
-
-export interface SignInPayload {
-    email: string
-    password: string
-}
+export type { AuthTokens, AuthResponse, ApiResponse, RegisterPayload, RegisterResponse, SignInPayload } from '@/src/types'
 
 export const registerUser = (payload: RegisterPayload): Promise<RegisterResponse> =>
     api.post('/auth/register', payload).then(r => r.data)

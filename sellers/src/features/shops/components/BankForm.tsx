@@ -11,15 +11,9 @@ interface BankFormErrors {
     accountNumber?: string;
 }
 
-export interface BankFormData {
-    bank: string;
-    accountNumber: string;
-}
+import type { BankFormData, BankFormHandle } from '@/src/types';
 
-export interface BankFormHandle {
-    validate: () => boolean;
-    getData: () => BankFormData;
-}
+export type { BankFormData, BankFormHandle } from '@/src/types';
 
 const BankForm = forwardRef<BankFormHandle, object>(
     (_, ref) => {

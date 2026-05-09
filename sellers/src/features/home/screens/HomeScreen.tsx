@@ -42,6 +42,14 @@ const HomeScreen = () => {
             setShowGoOnlineConfirmationModal(false);
             setShowGoOfflineConfirmationModal(false);
         },
+        onError: (error) => {
+            Toast.show({
+                type: 'error',
+                text1: 'Error encountered',
+                text2: error.message,
+                swipeable: true
+            })
+        }
     });
 
     const toggleTab = (selectedTab: 'online' | 'offline') => {
@@ -53,7 +61,7 @@ const HomeScreen = () => {
     return (
         <>
             <LoadingOverlay isVisible={isPending} />
-            <SafeAreaView className='flex-1 bg-white'>
+            <SafeAreaView className='flex-1 pb-4 bg-white' edges={['top', 'left', 'right']}>
                 <ScrollView className='flex-1 pt-4' showsVerticalScrollIndicator={false}>
                     <View className={` px-6 pb-2 ${tab === 'online' ? 'border-b-4 border-muted-neutral/60' : ''}`}>
                         <View className='mb-8'>
@@ -145,7 +153,8 @@ const HomeScreen = () => {
                 </View>
             </AppModal>
 
-            <PendingOrderBottomSheet />
+            {/* implement this pending order bottom sheet pop up later */}
+            {/* <PendingOrderBottomSheet /> */}
         </>
     )
 }

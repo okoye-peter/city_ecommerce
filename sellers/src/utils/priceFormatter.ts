@@ -1,14 +1,6 @@
-/**
- * Utility to format prices consistently throughout the application.
- * Defaults to Nigerian Naira (NGN).
- */
+import type { PriceFormatOptions } from '@/src/types';
 
-export interface PriceFormatOptions {
-  currency?: string;
-  locale?: string;
-  decimalPlaces?: number;
-  showSymbol?: boolean;
-}
+export type { PriceFormatOptions } from '@/src/types';
 
 /**
  * Formats a number or string into a localized currency string.

@@ -7,19 +7,9 @@ import AddProductBottomSheet from './AddProductBottomSheet';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { formatPrice } from '@/src/utils/priceFormatter';
 
-export interface ProductItem {
-    id: number;
-    name: string;
-    price: number;
-    description: string;
-    image: string;
-    categoryId: string;
-}
+import type { ProductItem, ProductFormHandle } from '@/src/types';
 
-export interface ProductFormHandle {
-    validate: () => boolean;
-    getData: () => { products: ProductItem[] };
-}
+export type { ProductItem, ProductFormHandle } from '@/src/types';
 
 const ProductForm = forwardRef<ProductFormHandle, object>(
     (_, ref) => {
