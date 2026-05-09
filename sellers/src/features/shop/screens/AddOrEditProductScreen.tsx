@@ -43,7 +43,9 @@ const AddOrEditProductScreen = () => {
     const router = useRouter()
     const insets = useSafeAreaInsets()
     const params = useLocalSearchParams<{ product?: string }>()
-    const product: Product | undefined = params.product ? JSON.parse(params.product) : undefined
+    const product: Product | undefined = (() => {
+        try { return params.product ? JSON.parse(params.product) : undefined } catch { return undefined }
+    })()
     const isEdit = !!product
 
     const [image, setImage] = useState(product?.imageUrl ?? '')
@@ -140,8 +142,6 @@ const AddOrEditProductScreen = () => {
 
             const productData = { ...result.data!, imageUrl: finalImageUrl }
 
-            console.log('data_here', productData)
-
             if (isEdit) await updateProductAsync(productData)
             else await createProductAsync(productData)
 
@@ -155,7 +155,7 @@ const AddOrEditProductScreen = () => {
         } catch (error: any) {
             if (uploadedPublicId) deleteFromCloudinary(uploadedPublicId).catch(() => {})
             const message = error?.response?.data?.message ?? `${isEdit ? 'Update' : 'Create'} failed. Please try again.`
-        console.log('product_create_update_error', message)
+        
             Toast.show({
                 type: 'error',
                 text1: `Error ${isEdit ? 'updating' : 'creating'} product`,

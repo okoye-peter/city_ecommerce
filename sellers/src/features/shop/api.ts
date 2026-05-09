@@ -1,5 +1,5 @@
 import api from '@/src/lib/axios';
-import type { StoreSummary, GetProductsParams, ProductsResponse, storeUpdateFormDataSchema, ApiResponse, Store, createOrUpdateProductDataFormDataSchema, Product } from '@/src/types';
+import type { StoreSummary, GetProductsParams, ProductsResponse, storeUpdateFormDataSchema, ApiResponse, Store, Product } from '@/src/types';
 import { CreateOrUpdateProductSchemaType } from './shopSchema';
 
 export type { Product, GetProductsParams, ProductsResponse, StoreSummary, Market } from '@/src/types';

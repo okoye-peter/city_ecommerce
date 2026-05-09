@@ -113,9 +113,7 @@ export const createProduct = async (userId: string, productData:CreateProductSch
         throw ApiError.forbidden('User not authorized');
     }
 
-    const category = productData.categoryId
-        ? await prisma.category.findFirst({ where: { id: productData.categoryId } })
-        : null;
+    const category = await prisma.category.findFirst({ where: { id: productData.categoryId } });
 
     if (!category)
         throw ApiError.badRequest('Invalid category selected');

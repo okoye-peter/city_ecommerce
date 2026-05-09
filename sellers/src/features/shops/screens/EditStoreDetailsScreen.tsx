@@ -81,7 +81,6 @@ export default function EditStoreDetailsScreen() {
     const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false)
 
     const [image, setImage] = useState<string | null>(storeDetails?.imageUrl || null);
-    const [shopImageUrl, setShopImageUrl] = useState<string | null>(storeDetails?.imageUrl || null);
     const [showPermissionFailedModal, setShowPermissionFailedModal] = useState<boolean>(false);
 
     const [shopName, setShopName] = useState(storeDetails?.name ?? '')
@@ -105,7 +104,6 @@ export default function EditStoreDetailsScreen() {
         setMarketSelected(storeDetails.marketId ?? '')
         setSelectedCategories(storeDetails.categories?.map(cat => cat.categoryId) ?? [])
         setImage(storeDetails.imageUrl ?? null)
-        setShopImageUrl(storeDetails.imageUrl ?? null)
         setOpeningTime(parseTimeToDate(storeDetails.openingTime))
         setClosingTime(parseTimeToDate(storeDetails.closingTime, 17))
         setOpenDays(parseOpenDays(storeDetails.openDays))
@@ -158,16 +156,7 @@ export default function EditStoreDetailsScreen() {
 
     const activeDays = daysOfWeek.filter(day => openDays[day]).map(day => day.toUpperCase())
 
-    const { mutateAsync: update, isPending } = useUpdateStore({
-        name: shopName,
-        imageUrl: shopImageUrl ?? '',
-        description: description ?? '',
-        marketId: marketSelected,
-        categoryIds: selectedCategories,
-        openDays: activeDays as any,
-        openingTime: toHHMM(openingTime),
-        closingTime: toHHMM(closingTime),
-    })
+    const { mutateAsync: update, isPending } = useUpdateStore()
 
     const categoriesData = categories?.map((cat) => ({ label: cat.name, value: cat.id })) ?? []
     const marketData = markets?.map((market) => ({ label: market.name, value: market.id })) ?? []
@@ -199,14 +188,24 @@ export default function EditStoreDetailsScreen() {
         setIsSubmittingUpdate(true);
         const uploadedPublicIds: string[] = [];
         try {
+            let finalImageUrl = image ?? '';
             const isNewLocalImage = image && !image.startsWith('http');
             if (isNewLocalImage) {
                 const { url: newUploadedShopImageUrl, publicId: shopImagePublicId } =
                     await uploadToCloudinary(image, 'stores');
                 uploadedPublicIds.push(shopImagePublicId);
-                setShopImageUrl(newUploadedShopImageUrl)
+                finalImageUrl = newUploadedShopImageUrl;
             }
-            await update()
+            await update({
+                name: shopName,
+                imageUrl: finalImageUrl,
+                description: description ?? '',
+                marketId: marketSelected,
+                categoryIds: selectedCategories,
+                openDays: activeDays as any,
+                openingTime: toHHMM(openingTime),
+                closingTime: toHHMM(closingTime),
+            })
             Toast.show({
                 type: 'success',
                 text1: 'Store Updated successfully'

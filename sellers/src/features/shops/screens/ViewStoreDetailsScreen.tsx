@@ -124,7 +124,7 @@ export default function ViewStoreDetailsScreen() {
                             className='p-1'
                             onPress={() => router.push('/(auth)/Shops/EditStoreDetailsScreen')}
                         >
-                            <Feather name="edit-3" size={18} color="#757575" />
+                            <Feather name="edit-3" size={22} color="#757575" />
                         </Pressable>
                     </View>
                     <Text className={`text-secondary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} leading-6 mb-4 px-6`}>

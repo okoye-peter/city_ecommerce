@@ -18,17 +18,10 @@ import { Image } from 'expo-image';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import CustomButton from '@/src/components/ui/CustomButton';
 import { useGetCategories } from '@/src/hooks/useCategory';
-
-interface Product {
-    name: string;
-    price: number;
-    description: string;
-    image: string;
-    categoryId: string;
-}
+import { CreateStoreProduct } from '@/src/types';
 
 interface Props {
-    onAddProduct: (product: Product) => void;
+    onAddProduct: (product: CreateStoreProduct) => void;
 }
 
 const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduct, ...rest }: Props, ref) => {
@@ -84,8 +77,9 @@ const AddProductBottomSheet = forwardRef<BottomSheetModal, Props>(({ onAddProduc
             name,
             price: parseFloat(price),
             description,
-            image: image || '',
-            categoryId: category || '',
+            imageUrl: image || '',
+            categoryId: Number(category),
+            isAvailable: true,
         });
         handleClose();
         setImage(null);
