@@ -8,6 +8,8 @@ function createTransporter() {
     port: env.SMTP_PORT,
     secure: env.SMTP_PORT === 465,
     auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+    connectionTimeout: 5000,
+    socketTimeout: 5000,
   });
 }
 

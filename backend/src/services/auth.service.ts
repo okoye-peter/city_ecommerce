@@ -39,6 +39,17 @@ async function issueTokens(userId: string, email: string, role: Role) {
   return { accessToken, refreshToken };
 }
 
+const STORE_SELECT = {
+  id: true,
+  name: true,
+  imageUrl: true,
+  description: true,
+  marketId: true,
+  openDays: true,
+  openingTime: true,
+  closingTime: true,
+} as const;
+
 // ─── OTP helpers ──────────────────────────────────────────────────────────────
 
 function generateOtp(): string {
@@ -92,8 +103,6 @@ export async function register(input: {
     return user;
   });
 
-  await sendVerificationEmail(user.email, user.firstName, otp);
-
   return {
     message: 'Registration successful.',
     email: user.email,
@@ -127,9 +136,12 @@ export async function verifyEmail(email: string, otp: string) {
     },
   });
 
-  const tokens = await issueTokens(user.id.toString(), user.email, user.role);
+  const [tokens, store] = await Promise.all([
+    issueTokens(user.id.toString(), user.email, user.role),
+    prisma.store.findFirst({ where: { ownerId: user.id }, select: STORE_SELECT }),
+  ]);
   const { password: _, refreshToken: __, emailVerifyOtp: ___, emailVerifyOtpExpiry: ____, passwordResetOtp: _____, passwordResetOtpExpiry: ______, ...safeUser } = user;
-  return { user: { ...safeUser, isVerified: true }, ...tokens };
+  return { user: { ...safeUser, isVerified: true }, store: store ?? null, ...tokens };
 }
 
 export async function resendVerification(email: string) {
@@ -169,7 +181,7 @@ export async function login(input: { email: string; password: string }) {
       lastLoginAt: true,
       createdAt: true,
       store: {
-        select: { id: true },
+        select: STORE_SELECT,
       },
     },
 
@@ -209,7 +221,7 @@ export async function login(input: { email: string; password: string }) {
 
   const tokens = await issueTokens(user.id.toString(), user.email, user.role);
   const { password: _, store, ...safeUser } = user;
-  return { user: { ...safeUser, storeCount: store ? 1 : 0 }, ...tokens };
+  return { user: safeUser, store: store ?? null, ...tokens };
 }
 
 export async function forgotPassword(email: string) {
@@ -314,9 +326,12 @@ export async function googleAuth(idToken: string) {
     });
   }
 
-  const tokens = await issueTokens(user.id.toString(), user.email, user.role);
+  const [tokens, store] = await Promise.all([
+    issueTokens(user.id.toString(), user.email, user.role),
+    prisma.store.findFirst({ where: { ownerId: user.id }, select: STORE_SELECT }),
+  ]);
   const { password: _, refreshToken: __, emailVerifyOtp: ___, emailVerifyOtpExpiry: ____, passwordResetOtp: _____, passwordResetOtpExpiry: ______, ...safeUser } = user;
-  return { user: safeUser, ...tokens };
+  return { user: safeUser, store: store ?? null, ...tokens };
 }
 
 export async function refreshTokens(token: string) {

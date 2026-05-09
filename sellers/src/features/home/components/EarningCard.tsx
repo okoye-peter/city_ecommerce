@@ -5,7 +5,7 @@ import { formatCompactNumber, formatPrice } from '@/src/utils/priceFormatter';
 import Feather from '@expo/vector-icons/Feather';
 
 
-const EarningCard = ({ amount, total }: { amount: number, total: number }) => {
+const EarningCard = ({ amount, total, percentage }: { amount: number, total: number, percentage: number }) => {
   return (
     <View className='w-full px-4 py-5 bg-light rounded-xl' style={styles.cardContainer}>
         <View className='flex-row justify-between mb-6'>
@@ -16,8 +16,16 @@ const EarningCard = ({ amount, total }: { amount: number, total: number }) => {
         <View className='flex-row justify-between mb-3'>
             <Text className={`${Platform.OS === 'ios' ? 'text-2xl' : 'text-3xl'} font-medium text-black-light leading-6`}>{formatPrice(amount)}</Text>
             <View className='flex-row items-center gap-2'>
-                <Feather name="trending-up" size={20} color="green" />
-                <Text className={`${Platform.OS === 'ios' ? 'text-sm' : 'text-base'} font-normal text-green-600`}>12% from yesterday</Text>
+                {percentage !== 0 && (
+                    <Feather 
+                        name={percentage > 0 ? "trending-up" : "trending-down"} 
+                        size={20} 
+                        color={percentage > 0 ? "green" : "red"} 
+                    />
+                )}
+                <Text className={`${Platform.OS === 'ios' ? 'text-sm' : 'text-base'} font-normal ${percentage > 0 ? 'text-green-600' : percentage < 0 ? 'text-red-600' : 'text-primary'}`}>
+                    {Math.abs(percentage)}% from yesterday
+                </Text>
             </View>
         </View>
         <Text className={`${Platform.OS === 'ios' ? 'text-sm' : 'text-base'} font-normal text-secondary`}>{formatCompactNumber(total)} Total Orders</Text>

@@ -29,6 +29,7 @@ import { Feather } from '@expo/vector-icons'
 import { registrationStepOneSchema, registrationStepTwoSchema } from '../authSchema'
 import { useRegister } from '../queries'
 import Toast from 'react-native-toast-message'
+import { isAxiosError } from 'axios';
 
 
 type Step = 1 | 2
@@ -155,7 +156,7 @@ const Register = () => {
             router.replace({ pathname: '/(guest)/SignInScreen'})
         } catch (error: any) {
             
-            const message = error?.response?.data?.message ?? 'Registration failed. Please try again.'
+            const message = isAxiosError(error) ? error?.response?.data?.message : 'Registration failed. Please try again.'
             Toast.show({
                 type: 'error',
                 text1: 'Registration Error',

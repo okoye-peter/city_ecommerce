@@ -4,19 +4,22 @@ const KEYS = {
     ACCESS_TOKEN: 'access_token',
     REFRESH_TOKEN: 'refresh_token',
     USER: 'user',
+    STORE: 'store',
 } as const;
 
 // In-memory cache for sync reads (Axios interceptor needs getAccessToken() to be sync)
 let _accessToken: string | null = null;
 let _user: string | null = null;
+let _store: string | null = null;
 
 /**
- * Call once at app startup. Pre-loads access token and user into memory
+ * Call once at app startup. Pre-loads access token, user, and store into memory
  * so the Axios request interceptor can read them synchronously.
  */
 export async function initStorage(): Promise<void> {
     _accessToken = await SecureStore.getItemAsync(KEYS.ACCESS_TOKEN);
     _user = await SecureStore.getItemAsync(KEYS.USER);
+    _store = await SecureStore.getItemAsync(KEYS.STORE);
 }
 
 export const secureStorage = {
@@ -70,11 +73,34 @@ export const secureStorage = {
         await SecureStore.deleteItemAsync(KEYS.USER);
     },
 
+    // ── Store — SecureStore persisted, memory-cached for sync reads
+
+    async setStore(store: object | null): Promise<void> {
+        if (store) {
+            const serialized = JSON.stringify(store);
+            _store = serialized;
+            await SecureStore.setItemAsync(KEYS.STORE, serialized);
+        } else {
+            _store = null;
+            await SecureStore.deleteItemAsync(KEYS.STORE);
+        }
+    },
+
+    getStore<T>(): T | null {
+        return _store ? (JSON.parse(_store) as T) : null;
+    },
+
+    async deleteStore(): Promise<void> {
+        _store = null;
+        await SecureStore.deleteItemAsync(KEYS.STORE);
+    },
+
     // ── Clear all (logout)
 
     async clearAll(): Promise<void> {
         await this.deleteAccessToken();
         await this.deleteUser();
         await this.deleteRefreshToken();
+        await this.deleteStore();
     },
 };

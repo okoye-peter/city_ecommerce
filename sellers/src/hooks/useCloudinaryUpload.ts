@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { uploadToCloudinary, deleteFromCloudinary } from '../lib/cloudinary';
+import type { CloudinaryFolder } from '@/src/types';
 
-export type CloudinaryFolder = 'stores' | 'products' | 'avatars' | 'identity';
+export type { CloudinaryFolder } from '@/src/types';
 
 export function useCloudinaryUpload() {
     const [isUploading, setIsUploading] = useState(false);

@@ -2,12 +2,16 @@ import { View, Text, Pressable, Platform, Alert } from 'react-native'
 import React, { forwardRef, useImperativeHandle, useState } from 'react'
 import SetupHeader from './SetupHeader'
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import AppModal from '@/src/components/ui/AppModal';
 import CustomButton from '@/src/components/ui/CustomButton';
-import CustomInput from '@/src/components/ui/CustomInput';
+import type { ShopFormHandle } from '@/src/types';
+import CustomSwitch from '@/src/components/ui/CustomSwitch';
 import BottomSheetDropdown from '@/src/components/ui/BottomSheetDropdown';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import CustomInput from '@/src/components/ui/CustomInput';
 
 interface Option {
     label: string,
@@ -21,18 +25,8 @@ interface ShopFormErrors {
     categories?: string;
 }
 
-export interface ShopFormData {
-    image: string | null;
-    shopName: string;
-    shopDescription: string;
-    marketSelected: string;
-    selectedCategories: string[];
-}
 
-export interface ShopFormHandle {
-    validate: () => boolean;
-    getData: () => ShopFormData;
-}
+export type { ShopFormData, ShopFormHandle } from '@/src/types';
 
 const ShopForm = forwardRef<ShopFormHandle, { markets: Option[], categories: Option[] }>(
     ({ markets, categories }, ref) => {
@@ -43,6 +37,48 @@ const ShopForm = forwardRef<ShopFormHandle, { markets: Option[], categories: Opt
         const [marketSelected, setMarketSelected] = useState<string>('');
         const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
         const [errors, setErrors] = useState<ShopFormErrors>({});
+
+        const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
+        type DayName = typeof daysOfWeek[number];
+
+        const [isHoursModalVisible, setIsHoursModalVisible] = useState(false);
+        const [openingTime, setOpeningTime] = useState(new Date(2024, 0, 1, 9, 0));
+        const [closingTime, setClosingTime] = useState(new Date(2024, 0, 1, 17, 30));
+        const [showOpeningPicker, setShowOpeningPicker] = useState(false);
+        const [showClosingPicker, setShowClosingPicker] = useState(false);
+        const [openDays, setOpenDays] = useState<Record<DayName, boolean>>({
+            Monday: true, Tuesday: true, Wednesday: true, Thursday: true,
+            Friday: true, Saturday: true, Sunday: true,
+        });
+
+        const toggleDay = (day: DayName) => setOpenDays(prev => ({ ...prev, [day]: !prev[day] }));
+
+        const formatTimeDisplay = (date: Date) =>
+            date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
+
+        const toHHMM = (date: Date) =>
+            `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+        const getDisplayDays = () => {
+            const activeDays = daysOfWeek.filter(day => openDays[day]);
+            if (activeDays.length === 0) return 'Closed';
+            if (activeDays.length === 7) return 'Monday - Sunday';
+            const getShort = (d: string) => d.substring(0, 3);
+            const ranges: string[] = [];
+            let startIdx = 0;
+            while (startIdx < activeDays.length) {
+                let endIdx = startIdx;
+                while (
+                    endIdx + 1 < activeDays.length &&
+                    daysOfWeek.indexOf(activeDays[endIdx + 1]) === daysOfWeek.indexOf(activeDays[endIdx]) + 1
+                ) endIdx++;
+                ranges.push(startIdx === endIdx
+                    ? getShort(activeDays[startIdx])
+                    : `${getShort(activeDays[startIdx])} - ${getShort(activeDays[endIdx])}`);
+                startIdx = endIdx + 1;
+            }
+            return ranges.join(', ');
+        };
 
         useImperativeHandle(ref, () => ({
             validate() {
@@ -55,7 +91,15 @@ const ShopForm = forwardRef<ShopFormHandle, { markets: Option[], categories: Opt
                 return Object.keys(newErrors).length === 0;
             },
             getData() {
-                return { image, shopName, shopDescription, marketSelected, selectedCategories };
+                const activeDays = daysOfWeek
+                    .filter(day => openDays[day])
+                    .map(day => day.toUpperCase());
+                return {
+                    image, shopName, shopDescription, marketSelected, selectedCategories,
+                    openDays: activeDays,
+                    openingTime: toHHMM(openingTime),
+                    closingTime: toHHMM(closingTime),
+                };
             },
         }));
 
@@ -217,6 +261,20 @@ const ShopForm = forwardRef<ShopFormHandle, { markets: Option[], categories: Opt
                                 <Text style={{ color: '#EF4444', fontSize: 12, marginTop: -8 }}>{errors.categories}</Text>
                             )}
                         </View>
+
+                        {/* Opening Hours */}
+                        <View className='pt-6 mt-2 border-t border-border/50'>
+                            <Text className={`font-normal font-Inter ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} mb-1`}>Opening hours</Text>
+                            <Pressable
+                                className='flex-row items-center justify-between py-2'
+                                onPress={() => setIsHoursModalVisible(true)}
+                            >
+                                <Text className={`text-secondary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>
+                                    {getDisplayDays()} <Text className='text-muted-foreground'>|</Text> {formatTimeDisplay(openingTime)} - {formatTimeDisplay(closingTime)}
+                                </Text>
+                                <Feather name='chevron-right' size={20} color='#757575' />
+                            </Pressable>
+                        </View>
                     </View>
                 </View>
 
@@ -233,6 +291,80 @@ const ShopForm = forwardRef<ShopFormHandle, { markets: Option[], categories: Opt
                             buttonText="Okay"
                             onPressHandler={() => setShowPermissionFailedModal(false)}
                         />
+                    </View>
+                </AppModal>
+
+                <AppModal
+                    isVisible={isHoursModalVisible}
+                    onClose={() => setIsHoursModalVisible(false)}
+                    title="Set Opening Hours"
+                >
+                    <View className='pt-2 space-y-6'>
+                        <View className='space-y-3'>
+                            <Text className='text-sm text-muted-foreground font-inter-medium'>Days open</Text>
+                            <View className='bg-gray-50/80 rounded-3xl p-1.5 border border-gray-100'>
+                                {daysOfWeek.map((day) => (
+                                    <View key={day} className='flex-row items-center justify-between px-4 py-2 border-b border-gray-100/50 last:border-0'>
+                                        <Text className='font-inter text-body'>{day}</Text>
+                                        <CustomSwitch value={openDays[day]} onValueChange={() => toggleDay(day)} />
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+
+                        <View className='flex-row gap-3 mt-4'>
+                            <View className='flex-1 space-y-2'>
+                                <Text className='px-1 text-xs tracking-wider uppercase text-muted-foreground font-inter-medium'>Opens at</Text>
+                                <Pressable
+                                    onPress={() => { setShowOpeningPicker(true); setShowClosingPicker(false); }}
+                                    className={`h-14 rounded-2xl border items-center justify-center ${showOpeningPicker ? 'bg-primary/5 border-primary' : 'bg-gray-50 border-gray-100'}`}
+                                >
+                                    <Text className='text-lg font-inter-bold text-primary'>{formatTimeDisplay(openingTime)}</Text>
+                                </Pressable>
+                            </View>
+                            <View className='flex-1 space-y-2'>
+                                <Text className='px-1 text-xs tracking-wider uppercase text-muted-foreground font-inter-medium'>Closes at</Text>
+                                <Pressable
+                                    onPress={() => { setShowClosingPicker(true); setShowOpeningPicker(false); }}
+                                    className={`h-14 rounded-2xl border items-center justify-center ${showClosingPicker ? 'bg-primary/5 border-primary' : 'bg-gray-50 border-gray-100'}`}
+                                >
+                                    <Text className='text-lg font-inter-bold text-primary'>{formatTimeDisplay(closingTime)}</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+
+                        {(showOpeningPicker || showClosingPicker) && (
+                            <View className='items-center justify-center py-6 mt-4 border bg-gray-50/50 rounded-3xl border-gray-100/50'>
+                                <DateTimePicker
+                                    value={showOpeningPicker ? openingTime : closingTime}
+                                    mode='time'
+                                    is24Hour={false}
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={(_, selectedDate) => {
+                                        if (Platform.OS === 'android') {
+                                            setShowOpeningPicker(false);
+                                            setShowClosingPicker(false);
+                                        }
+                                        if (selectedDate) {
+                                            if (showOpeningPicker) setOpeningTime(selectedDate);
+                                            else setClosingTime(selectedDate);
+                                        }
+                                    }}
+                                />
+                                {Platform.OS === 'ios' && (
+                                    <Pressable
+                                        onPress={() => { setShowOpeningPicker(false); setShowClosingPicker(false); }}
+                                        className='px-10 py-3 mt-4 bg-primary rounded-2xl'
+                                    >
+                                        <Text className='text-white font-inter-semibold'>Confirm selection</Text>
+                                    </Pressable>
+                                )}
+                            </View>
+                        )}
+
+                        <View className='pt-4'>
+                            <CustomButton buttonText='Done' onPressHandler={() => setIsHoursModalVisible(false)} />
+                        </View>
                     </View>
                 </AppModal>
             </>

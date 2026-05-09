@@ -164,7 +164,7 @@ const EarningsScreen = () => {
                     Earnings
                 </Text>
             </View>
-            <View className='pb-6 border-b-4 border-border/30 px-6 gap-6'>
+            <View className='gap-6 px-6 pb-6 border-b-4 border-border/30'>
                 <EarningSummaryCard trend='up' percentage={50} />
 
                 <CustomButton
@@ -216,7 +216,7 @@ const EarningsScreen = () => {
                     </Pressable>
 
                     {hasDateFilter && (
-                        <Pressable onPress={clearDates} className="border border-border rounded-lg p-2">
+                        <Pressable onPress={clearDates} className="p-2 border rounded-lg border-border">
                             <Feather name="x" size={13} color="#9CA3AF" />
                         </Pressable>
                     )}
@@ -237,7 +237,7 @@ const EarningsScreen = () => {
     );
 
     return (
-        <SafeAreaView className='flex-1 bg-white'>
+        <SafeAreaView edges={['top', 'left', 'right']} className='flex-1 bg-white'>
             <FlatList
                 data={filteredTransactions}
                 keyExtractor={(item) => item.id}
@@ -269,7 +269,7 @@ const EarningsScreen = () => {
                         className="flex-1 bg-black/40"
                         onPress={() => setActivePicker(null)}
                     />
-                    <View className="bg-white rounded-t-3xl pb-8">
+                    <View className="pb-8 bg-white rounded-t-3xl">
                         <View className="flex-row items-center justify-between px-5 pt-4 pb-2 border-b border-border">
                             <Pressable onPress={() => setActivePicker(null)} hitSlop={8}>
                                 <Text className={`font-inter text-secondary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>Cancel</Text>

@@ -55,7 +55,7 @@ const ProfileScreen = () => {
     return (
         <>
             <LoadingOverlay isVisible={isSigningOut} />
-            <SafeAreaView className='flex-1 bg-white'>
+            <SafeAreaView className='flex-1 bg-white' edges={['top', 'left', 'right']}>
                 <View className='items-center pt-10 pb-4 border-b-4 border-border/40'>
                     <View className='w-24 h-24 overflow-hidden rounded-full'>
                         {

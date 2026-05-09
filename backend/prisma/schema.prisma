@@ -71,6 +71,9 @@ model Store {
     imageUrl    String?
     ownerId     BigInt   @unique
     marketId    BigInt?
+    openDays    Day[]    @default([])
+    openingTime String?  // "HH:mm" e.g. "09:00"
+    closingTime String?  // "HH:mm" e.g. "17:30"
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
@@ -176,7 +179,7 @@ model OrderGroup {
 model Order {
     id           BigInt      @id @default(autoincrement())
     orderGroupId BigInt
-    productId    BigInt
+    productId    BigInt?
     quantity     Int
     unitPrice    Float
     totalPrice   Float
@@ -186,7 +189,7 @@ model Order {
     updatedAt    DateTime    @updatedAt
 
     orderGroup   OrderGroup         @relation(fields: [orderGroupId], references: [id], onDelete: Cascade)
-    product      Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+    product      Product?            @relation(fields: [productId], references: [id], onDelete: SetNull)
     escrowEntry  SellerEscrowEntry?
     refund       WalletTransaction? // populated only when status → DECLINED
 
@@ -318,4 +321,14 @@ enum WithdrawalStatus {
 enum WalletTransactionType {
     REFUND             // credited to buyer when seller declines a paid order
     PURCHASE_DEDUCTION // debited when buyer uses credit on a new order
+}
+
+enum Day {
+    MONDAY
+    TUESDAY
+    WEDNESDAY
+    THURSDAY
+    FRIDAY
+    SATURDAY
+    SUNDAY
 }

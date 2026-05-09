@@ -6,14 +6,77 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
+import { useGetUserStoreSummary } from '../../shop/queries';
+import Skeleton from '@/src/components/ui/Skeleton';
 
 cssInterop(LinearGradient, {
     className: 'style',
 });
 
+const DAY_ORDER = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+const DAY_NAMES: Record<string, string> = {
+    MONDAY: 'Monday', TUESDAY: 'Tuesday', WEDNESDAY: 'Wednesday',
+    THURSDAY: 'Thursday', FRIDAY: 'Friday', SATURDAY: 'Saturday', SUNDAY: 'Sunday',
+};
+
+function formatTime(time: string | null | undefined): string {
+    if (!time) return '';
+    const [h, m] = time.split(':').map(Number);
+    const period = h >= 12 ? 'pm' : 'am';
+    const hour = h % 12 || 12;
+    return `${hour}:${m.toString().padStart(2, '0')} ${period}`;
+}
+
+function formatOpenDays(days: string[]): string {
+    if (!days || days.length === 0) return 'Closed';
+    if (days.length === 7) return 'Monday - Sunday';
+    const sorted = [...days].sort((a, b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b));
+    if (sorted.length === 1) return DAY_NAMES[sorted[0]];
+    return `${DAY_NAMES[sorted[0]]} - ${DAY_NAMES[sorted[sorted.length - 1]]}`;
+}
 
 export default function ViewStoreDetailsScreen() {
     const router = useRouter();
+
+    const { data: store, isLoading } = useGetUserStoreSummary();
+
+    const storeDetails = store?.store;
+    const orderCount = store?.orderCount;
+
+    if (isLoading) {
+        return (
+            <SafeAreaView className='flex-1 bg-white'>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    <Skeleton width="100%" height={350} borderRadius={0} />
+                    <View className='bg-white -mt-8 rounded-t-[32px] pt-6 pb-10'>
+                        <View className='px-6 mb-4'>
+                            <Skeleton width={120} height={24} borderRadius={6} />
+                        </View>
+                        <View className='gap-2 px-6 mb-6'>
+                            <Skeleton width="100%" height={16} borderRadius={4} />
+                            <Skeleton width="90%" height={16} borderRadius={4} />
+                            <Skeleton width="65%" height={16} borderRadius={4} />
+                        </View>
+                        <View className='px-6 mb-6'>
+                            <Skeleton width={200} height={18} borderRadius={4} />
+                        </View>
+                        <View className='flex-row gap-2 px-6 pb-4 mb-2'>
+                            <Skeleton width={80} height={32} borderRadius={8} />
+                            <Skeleton width={80} height={32} borderRadius={8} />
+                            <Skeleton width={80} height={32} borderRadius={8} />
+                        </View>
+                        <View className='px-6 py-6'>
+                            <Skeleton width={180} height={18} borderRadius={4} />
+                        </View>
+                        <View className='gap-2 px-6 mt-2'>
+                            <Skeleton width={140} height={24} borderRadius={6} />
+                            <Skeleton width={220} height={16} borderRadius={4} />
+                        </View>
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView className='flex-1 bg-white'>
@@ -29,7 +92,9 @@ export default function ViewStoreDetailsScreen() {
 
                     {/* store banner */}
                     <Image
-                        source="https://i.pinimg.com/1200x/fc/91/8a/fc918ad6c979aa2cea78bf3cd39abe2f.jpg"
+                        source={{
+                            uri: storeDetails?.imageUrl ?? undefined
+                        }}
                         style={{ width: '100%', height: 350, backgroundColor: '#E5E7EB' }}
                         contentFit='cover'
                         transition={500}
@@ -43,8 +108,10 @@ export default function ViewStoreDetailsScreen() {
 
                     {/* store name and location over image */}
                     <View className='absolute bottom-12 left-6 right-6'>
-                        <Text className='text-2xl font-bold text-white'>Amaka&apos;s Fabrics</Text>
-                        <Text className='text-base text-white/80'>Balogun Market</Text>
+                        <Text className='text-2xl font-bold text-white'>{storeDetails?.name}</Text>
+                        {storeDetails?.market?.name && (
+                            <Text className='text-base text-white/80'>{storeDetails.market.name}</Text>
+                        )}
                     </View>
                 </View>
 
@@ -52,8 +119,8 @@ export default function ViewStoreDetailsScreen() {
                 <View className='bg-white -mt-8 rounded-t-[32px] pt-6 pb-10 flex-1'>
                     {/* Description Section */}
                     <View className='flex-row items-start justify-between px-6 mb-4'>
-                        <Text className={`text-primary font-normal ${Platform.OS === 'ios' ? 'text-xl' : 'text-2xl'}`}>Description</Text>
-                        <Pressable 
+                        <Text className={`text-primary font-normal ${Platform.OS === 'ios' ? 'text-xl' : 'text-2xl'}`}>{storeDetails?.description}</Text>
+                        <Pressable
                             className='p-1'
                             onPress={() => router.push('/(auth)/Shops/EditStoreDetailsScreen')}
                         >
@@ -61,25 +128,30 @@ export default function ViewStoreDetailsScreen() {
                         </Pressable>
                     </View>
                     <Text className={`text-secondary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} leading-6 mb-4 px-6`}>
-                        Premium Ankara, lace, and ready-to-wear. Direct from the best fabric merchants in Balogun Market.
+                        {storeDetails?.description ?? '—'}
                     </Text>
 
                     {/* Stats Section */}
                     <View className='flex-row items-center px-6 mb-6'>
                         <Ionicons name="star" size={17} color="#E8B931" />
                         <Text className={`text-secondary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} ml-1.5`}>
-                            4.5 <Text className='text-secondary'>|</Text> 156 Orders <Text className='text-muted-foreground'>|</Text> Open until 5:30 pm
+                            {orderCount ?? 0} Orders
+                            {storeDetails?.closingTime ? (
+                                <Text> <Text className='text-muted-foreground'>|</Text> Open until {formatTime(storeDetails.closingTime)}</Text>
+                            ) : null}
                         </Text>
                     </View>
 
-                    {/* Tags Section */}
-                    <View className='flex-row flex-wrap gap-2 px-6 pb-4 border-b-4 border-border/30'>
-                        {['Fabrics', 'Fashion', 'Accessories'].map((tag) => (
-                            <View key={tag} className='bg-light px-2 py-1.5 rounded-lg'>
-                                <Text className='text-sm font-normal text-secondary'>{tag}</Text>
-                            </View>
-                        ))}
-                    </View>
+                    {/* Categories Section */}
+                    {storeDetails?.categories && storeDetails.categories.length > 0 && (
+                        <View className='flex-row flex-wrap gap-2 px-6 pb-4 border-b-4 border-border/30'>
+                            {storeDetails.categories.map((c) => (
+                                <View key={c.id} className='bg-light px-2 py-1.5 rounded-lg'>
+                                    <Text className='text-sm font-normal text-secondary'>{c.category.name}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    )}
 
                     {/* Share Section */}
                     <View className='flex-row items-center justify-between px-6 py-6 border-b-4 border-border/30'>
@@ -96,7 +168,10 @@ export default function ViewStoreDetailsScreen() {
                     <View className='px-6 mt-6'>
                         <Text className={`text-primary ${Platform.OS === 'ios' ? 'text-xl' : 'text-2xl'} font-normal mb-2`}>Opening hours</Text>
                         <Text className={`text-secondary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} leading-6`}>
-                            Monday - Sunday <Text className='text-muted-foreground'>|</Text> 9:00 am - 5:30 pm
+                            {storeDetails?.openDays ? formatOpenDays(storeDetails.openDays) : '—'}
+                            {storeDetails?.openingTime && storeDetails?.closingTime ? (
+                                <Text> <Text className='text-muted-foreground'>|</Text> {formatTime(storeDetails.openingTime)} - {formatTime(storeDetails.closingTime)}</Text>
+                            ) : null}
                         </Text>
                     </View>
                 </View>
