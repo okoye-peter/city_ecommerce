@@ -16,10 +16,7 @@ import ShopForm, {
 import BankForm, {
     BankFormHandle,
 } from '@/src/features/shops/components/BankForm';
-import ProductForm, {
-    ProductFormHandle,
-    ProductItem,
-} from '@/src/features/shops/components/ProductForm';
+import ProductForm, { ProductFormHandle } from '@/src/features/shops/components/ProductForm';
 import CustomButton from '@/src/components/ui/CustomButton';
 import LoadingOverlay from '@/src/components/ui/LoadingOverlay';
 import { useRouter } from 'expo-router';
@@ -31,6 +28,7 @@ import { createStore } from '@/src/services/store.service';
 import { useAuthStore } from '../../auth/store/authStore';
 import { isAxiosError } from 'axios';
 import Toast from 'react-native-toast-message';
+import { CreateStoreProduct } from '@/src/types';
 
 const StoreSetupScreen = () => {
     const setStore = useAuthStore((s) => s.setStore);
@@ -43,7 +41,7 @@ const StoreSetupScreen = () => {
     const bankFormRef = useRef<BankFormHandle>(null);
 
     const [collectedShopData, setCollectedShopData] = useState<ShopFormData | null>(null);
-    const [collectedProducts, setCollectedProducts] = useState<ProductItem[]>([]);
+    const [collectedProducts, setCollectedProducts] = useState<CreateStoreProduct[]>([]);
 
 
     const {
@@ -85,7 +83,7 @@ const StoreSetupScreen = () => {
             const uploadedProducts = await Promise.all(
                 collectedProducts.map(async (product) => {
                     const { url, publicId } = await uploadToCloudinary(
-                        product.image,
+                        product.imageUrl,
                         'products',
                     );
                     uploadedPublicIds.push(publicId);

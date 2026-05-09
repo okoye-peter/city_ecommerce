@@ -5,24 +5,46 @@ import { formatPrice } from '@/src/utils/priceFormatter'
 import { clsx } from 'clsx';
 import Feather from '@expo/vector-icons/Feather';
 import Skeleton from '@/src/components/ui/Skeleton';
-import EditProductBottomSheet from './EditOrAddProductBottomSheet';
 import AppModal from '@/src/components/ui/AppModal';
 import CustomButton from '@/src/components/ui/CustomButton';
+import { Product } from '@/src/types';
+import { useDeleteProduct } from '../queries';
+import LoadingOverlay from '@/src/components/ui/LoadingOverlay';
+import Toast from 'react-native-toast-message';
+import { useRouter } from 'expo-router';
 
 interface ProductCardProps {
-    image: string;
-    name: string;
-    price: number;
-    quantity: number;
+    product: Product
 }
 
-const ProductCard = ({ image, name, price, quantity }: ProductCardProps) => {
+const ProductCard = ({ product }: ProductCardProps) => {
+    const router = useRouter()
     const [isImageLoading, setIsImageLoading] = useState(true);
-    const [isEditBottomSheetOpen, setIsEditBottomSheetOpen] = useState(false);
     const [showDeleteProductWarningModal, setShowDeleteProductWarningModal] = useState(false);
+
+    const { mutateAsync: deleteProduct, isPending } = useDeleteProduct(product?.id)
+
+    const handleDelete = async () => {
+        setShowDeleteProductWarningModal(false)
+        try {
+            await deleteProduct()
+            Toast.show({
+                type: 'success',
+                text1: 'product deleted successfully',
+                text2: `${product.name} has been deleted successfully`
+            })
+        } catch (err) {
+            Toast.show({
+                type: 'error',
+                text1: 'sorry something went wrong',
+                text2: err instanceof Error ? err.message : 'An error occurred'
+            })
+        }
+    }
 
     return (
         <>
+            <LoadingOverlay isVisible={isPending} />
             <View className='flex-row items-center gap-4'>
                 <View className='h-[88px] w-[88px] rounded-2xl overflow-hidden relative'>
                     {isImageLoading && (
@@ -34,7 +56,7 @@ const ProductCard = ({ image, name, price, quantity }: ProductCardProps) => {
                         />
                     )}
                     <Image
-                        source={{ uri: image }}
+                        source={{ uri: product.imageUrl! }}
                         style={{ width: '100%', height: '100%' }}
                         onLoadStart={() => setIsImageLoading(true)}
                         onLoad={() => setIsImageLoading(false)}
@@ -43,14 +65,18 @@ const ProductCard = ({ image, name, price, quantity }: ProductCardProps) => {
                     />
                 </View>
                 <View className='flex-1'>
-                    <Text numberOfLines={1} className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal font-Inter text-primary mb-1.5`}>{name}</Text>
-                    <Text numberOfLines={1} className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal font-Inter text-primary mb-1.5`}>{formatPrice(price)}</Text>
+                    <Text numberOfLines={1} className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal font-Inter text-primary mb-1.5`}>{product.name}</Text>
+                    <Text numberOfLines={1} className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal font-Inter text-primary mb-1.5`}>{formatPrice(product.price)}</Text>
 
                     <View className='flex-row items-center justify-between gap-2'>
-                        <Text className={clsx(`font-normal border px-3 py-1 rounded-full font-Inter`, quantity > 0 ? 'border-green-600 text-green-600 bg-green-50' : 'border-red-600 bg-red-50 text-red-600')}>{quantity > 0 ? 'In Stock' : 'Out of Stock'}</Text>
-
+                        <Text className={clsx(`font-normal border px-3 py-1 rounded-full font-Inter`, product.isAvailable ? 'border-green-600 text-green-600 bg-green-50' : 'border-red-600 bg-red-50 text-red-600')}>
+                            {product.isAvailable ? 'In Stock' : 'Out of Stock'}
+                        </Text>
                         <View className='flex-row gap-4'>
-                            <Pressable onPress={() => setIsEditBottomSheetOpen(true)}>
+                            <Pressable onPress={() => router.push({
+                                pathname: '/(auth)/Shop/AddOrEditProductScreen',
+                                params: { product: JSON.stringify(product) }
+                            })}>
                                 <Feather name="edit-3" size={18} color="#757575" />
                             </Pressable>
                             <Pressable onPress={() => setShowDeleteProductWarningModal(true)}>
@@ -58,31 +84,20 @@ const ProductCard = ({ image, name, price, quantity }: ProductCardProps) => {
                             </Pressable>
                         </View>
                     </View>
-
                 </View>
             </View>
-
-
-            {isEditBottomSheetOpen && (
-                <EditProductBottomSheet
-                    onClose={() => setIsEditBottomSheetOpen(false)}
-                    product={{ image, name, price, quantity, id: 0 }}
-                />
-            )}
 
             <AppModal
                 isVisible={showDeleteProductWarningModal}
                 title='Delete Product'
                 onClose={() => setShowDeleteProductWarningModal(false)}
-
             >
                 <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-normal font-Inter text-primary mb-4`}>
-                    <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-semibold text-primary`}>&quot;{name}&quot;</Text> will be permanently removed. This action cannot be undone.
+                    <Text className={`${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} font-semibold text-primary`}>&quot;{product.name}&quot;</Text> will be permanently removed. This action cannot be undone.
                 </Text>
-
                 <CustomButton
                     buttonText="Yes, Delete"
-                    onPressHandler={() => setShowDeleteProductWarningModal(false)}
+                    onPressHandler={handleDelete}
                     classStyle='!bg-red-600 mb-2'
                 />
                 <CustomButton

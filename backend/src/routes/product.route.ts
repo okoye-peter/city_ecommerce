@@ -11,6 +11,7 @@ router.use(authenticate);
 
 router.get("/", productController.getPaginatedProducts);
 router.get("/:productId", productController.getProductDetails);
+router.post("/", authorize(Role.SELLER), validate(productSchema), productController.createProduct);
 router.patch("/:productId", authorize(Role.SELLER), validate(productSchema.partial()), productController.updateProduct);
 router.delete("/:productId", authorize(Role.SELLER), productController.deleteProduct);
 

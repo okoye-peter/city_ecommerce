@@ -1,6 +1,6 @@
-import z from "zod";
+import { z } from "zod";
 
-export const productBody = z.object({
+export const createOrUpdateProductScheme = z.object({
     name: z.string().max(255),
     description: z.string().max(1000).optional(),
     price: z.coerce.number().nonnegative(),
@@ -9,7 +9,4 @@ export const productBody = z.object({
     imageUrl: z.string().url(),
 })
 
-export const productSchema = z.object({ body: productBody })
-
-
-export type CreateProductSchemaType = z.infer<typeof productBody>;
+export type CreateOrUpdateProductSchemaType = z.infer<typeof createOrUpdateProductScheme>;

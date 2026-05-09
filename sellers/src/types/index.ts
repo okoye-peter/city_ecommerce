@@ -1,12 +1,12 @@
 export type IdType = 'national_id' | 'passport' | 'drivers_license';
 
 export interface PaginationMeta {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasMore: boolean;
-    nextPage: number | null;
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasMore: boolean;
+  nextPage: number | null;
 }
 
 export type OrderStatus =
@@ -18,11 +18,11 @@ export type OrderStatus =
   | 'returned';
 
 export type OrderGroupStatus =
-    | 'PENDING'
-    | 'PAYMENT_CONFIRMED'
-    | 'SHIPPED'
-    | 'DELIVERED'
-    | 'CANCELLED';
+  | 'PENDING'
+  | 'PAYMENT_CONFIRMED'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELLED';
 
 export type TransactionType = 'credit' | 'debit';
 
@@ -56,14 +56,14 @@ export interface OrderProduct {
 }
 
 export interface OrderGroup {
-    id: string;
-    refNo: string;
-    status: OrderGroupStatus;
-    buyerId: string;
-    totalAmount: number;
-    createdAt: Date;
-    updatedAt: Date;
-    orders?: Order[];
+  id: string;
+  refNo: string;
+  status: OrderGroupStatus;
+  buyerId: string;
+  totalAmount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  orders?: Order[];
 }
 
 export interface Order {
@@ -90,8 +90,8 @@ export interface Transaction {
 
 // Auth types
 export interface AuthTokens {
-    accessToken: string;
-    refreshToken: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface User {
@@ -101,7 +101,10 @@ export interface User {
   lastName: string;
   avatar: string;
   role: 'BUYER' | 'SELLER';
-  verificationType?: 'NATIONAL_ID' | 'DRIVERS_LICENSE' | 'INTERNATIONAL_PASSPORT';
+  verificationType?:
+    | 'NATIONAL_ID'
+    | 'DRIVERS_LICENSE'
+    | 'INTERNATIONAL_PASSPORT';
   verificationId?: string;
   isVerified: boolean;
   isActive: boolean;
@@ -121,120 +124,136 @@ export interface Store {
 }
 
 export interface AuthResponse extends AuthTokens {
-    user: User;
-    store: Store | null;
+  user: User;
+  store: Store | null;
 }
 
 export interface ApiResponse<T> {
-    data: T;
-    message: string;
-    success: boolean;
+  data: T;
+  message: string;
+  success: boolean;
 }
 
 export interface RegisterPayload {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    passwordConfirmation: string;
-    role: 'SELLER';
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  passwordConfirmation: string;
+  role: 'SELLER';
 }
 
 export type RegisterResponse = ApiResponse<{ email: string; message: string }>;
 
 export interface SignInPayload {
-    email: string;
-    password: string;
+  email: string;
+  password: string;
 }
 
 // Product types
 export interface Product {
-    id: string;
-    name: string;
-    description: string | null;
-    price: number;
-    imageUrl: string | null;
-    storeId: string;
-    isAvailable: boolean;
-    categoryId: string | null;
-    createdAt: string;
-    updatedAt: string;
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  imageUrl: string | null;
+  storeId: string;
+  isAvailable: boolean;
+  categoryId: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GetProductsParams {
-    page?: number;
-    limit?: number;
-    search?: string;
-    order?: 'asc' | 'desc';
-    storeId?: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  order?: 'asc' | 'desc';
+  storeId?: string;
 }
 
 export interface ProductsResponse {
-    data: Product[];
-    meta: PaginationMeta;
-    message: string;
-    success: boolean;
+  data: Product[];
+  meta: PaginationMeta;
+  message: string;
+  success: boolean;
 }
 
 export interface StoreSummary {
-    store: {
-        id: string;
-        name: string;
-        description: string | null;
-        imageUrl: string | null;
-        ownerId: string;
-        marketId: string | null;
-        openDays: string[];
-        openingTime: string | null;
-        closingTime: string | null;
-        createdAt: string;
-        updatedAt: string;
-        market?: Market;
-        categories: { id: string; categoryId: string; storeId: string; category: Category }[];
-    };
-    orderCount: number;
+  store: {
+    id: string;
+    name: string;
+    description: string | null;
+    imageUrl: string | null;
+    ownerId: string;
+    marketId: string | null;
+    openDays: string[];
+    openingTime: string | null;
+    closingTime: string | null;
+    createdAt: string;
+    updatedAt: string;
+    market?: Market;
+    categories: {
+      id: string;
+      categoryId: string;
+      storeId: string;
+      category: Category;
+    }[];
+  };
+  orderCount: number;
 }
 
 // Store service types
 export interface CreateStoreProduct {
-    name: string;
-    description: string;
-    price: number;
-    isAvailable: boolean;
-    categoryId: number;
-    imageUrl: string;
+  name: string;
+  description: string;
+  price: number;
+  isAvailable: boolean;
+  categoryId: number;
+  imageUrl: string;
 }
 
 export interface CreateStorePayload {
-    name: string;
-    imageUrl: string;
-    description?: string;
-    marketId: number;
-    categoryIds?: number[];
-    products?: CreateStoreProduct[];
-    bank: {
-        bankId: number;
-        accountNumber: string;
-    };
-    openDays?: string[];
-    openingTime?: string;
-    closingTime?: string;
+  name: string;
+  imageUrl: string;
+  description?: string;
+  marketId: number;
+  categoryIds?: number[];
+  products?: CreateStoreProduct[];
+  bank: {
+    bankId: number;
+    accountNumber: string;
+  };
+  openDays?: string[];
+  openingTime?: string;
+  closingTime?: string;
 }
 
 export interface CreatedStore {
-    id: number;
-    name: string;
-    imageUrl: string;
-    description: string | null;
-    isOpen: boolean;
-    marketId: number;
-    openDays: string[];
-    openingTime: string | null;
-    closingTime: string | null;
+  id: number;
+  name: string;
+  imageUrl: string;
+  description: string | null;
+  isOpen: boolean;
+  marketId: number;
+  openDays: string[];
+  openingTime: string | null;
+  closingTime: string | null;
 }
 
 // Utility types
-export type StatusType = 'accepted' | 'ready_for_pickup' | 'pending' | 'picked_up' | 'delivered' | 'cancel' | 'processing' | 'shipped' | 'cancelled' | 'returned' | 'payment_confirmed';
+export type StatusType =
+  | 'accepted'
+  | 'ready_for_pickup'
+  | 'pending'
+  | 'picked_up'
+  | 'delivered'
+  | 'cancel'
+  | 'processing'
+  | 'shipped'
+  | 'cancelled'
+  | 'returned'
+  | 'payment_confirmed';
 
 export interface PriceFormatOptions {
   currency?: string;
@@ -247,64 +266,62 @@ export type CloudinaryFolder = 'stores' | 'products' | 'avatars' | 'identity';
 
 // Order screen types
 export interface OrderItem {
-    id: number;
-    productImageUrl: string;
-    productName: string;
-    orderTotal: number;
-    orderRef: string;
-    date: string;
-    status: StatusType;
+  id: number;
+  productImageUrl: string;
+  productName: string;
+  orderTotal: number;
+  orderRef: string;
+  date: string;
+  status: StatusType;
 }
 
 // Form types
-export interface ProductItem {
-    id: number;
-    name: string;
-    price: number;
-    description: string;
-    image: string;
-    categoryId: string;
-}
-
 export interface ProductFormHandle {
-    validate: () => boolean;
-    getData: () => { products: ProductItem[] };
+  validate: () => boolean;
+  getData: () => { products: CreateStoreProduct[] };
 }
 
 export interface ShopFormData {
-    image: string | null;
-    shopName: string;
-    shopDescription: string;
-    marketSelected: string;
-    selectedCategories: string[];
-    openDays: string[];
-    openingTime: string;
-    closingTime: string;
+  image: string | null;
+  shopName: string;
+  shopDescription: string;
+  marketSelected: string;
+  selectedCategories: string[];
+  openDays: string[];
+  openingTime: string;
+  closingTime: string;
 }
 
 export interface ShopFormHandle {
-    validate: () => boolean;
-    getData: () => ShopFormData;
+  validate: () => boolean;
+  getData: () => ShopFormData;
 }
 
 export interface BankFormData {
-    bank: string;
-    accountNumber: string;
+  bank: string;
+  accountNumber: string;
 }
 
 export interface BankFormHandle {
-    validate: () => boolean;
-    getData: () => BankFormData;
+  validate: () => boolean;
+  getData: () => BankFormData;
 }
 
-export type daysEnum = 'MONDAY'| 'TUESDAY'| 'WEDNESDAY'| 'THURSDAY'| 'FRIDAY'| 'SATURDAY'| 'SUNDAY'
-export interface storeUpdateFormData { 
-    name: string;
-    imageUrl: string;
-    description: string;
-    marketId: string;
-    categoryIds: string[] | number[];
-    openDays: daysEnum[];
-    openingTime: string;
-    closingTime: string
+export type daysEnum =
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY'
+  | 'SUNDAY';
+export interface storeUpdateFormDataSchema {
+  name: string;
+  imageUrl: string;
+  description: string;
+  marketId: string;
+  categoryIds: string[] | number[];
+  openDays: daysEnum[];
+  openingTime: string;
+  closingTime: string;
 }

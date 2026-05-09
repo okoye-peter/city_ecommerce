@@ -7,14 +7,16 @@ import AddProductBottomSheet from './AddProductBottomSheet';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { formatPrice } from '@/src/utils/priceFormatter';
 
-import type { ProductItem, ProductFormHandle } from '@/src/types';
+import type { CreateStoreProduct, ProductFormHandle } from '@/src/types';
 
-export type { ProductItem, ProductFormHandle } from '@/src/types';
+export type { ProductFormHandle } from '@/src/types';
+
+type LocalProduct = CreateStoreProduct & { id: string };
 
 const ProductForm = forwardRef<ProductFormHandle, object>(
     (_, ref) => {
         const addProductSheetRef = useRef<BottomSheetModal>(null);
-        const [products, setProducts] = useState<ProductItem[]>([]);
+        const [products, setProducts] = useState<LocalProduct[]>([]);
         const [error, setError] = useState<string>('');
 
         useImperativeHandle(ref, () => ({
@@ -27,16 +29,16 @@ const ProductForm = forwardRef<ProductFormHandle, object>(
                 return true;
             },
             getData() {
-                return { products };
+                return { products: products.map(({ id: _id, ...p }) => p) };
             },
         }));
 
-        const addProduct = (product: Omit<ProductItem, 'id'>) => {
-            setProducts(prev => [...prev, { ...product, id: prev.length + 1 }]);
+        const addProduct = (product: CreateStoreProduct) => {
+            setProducts(prev => [...prev, { ...product, id: String(prev.length + 1) }]);
             setError('');
         };
 
-        const removeProduct = (id: number) => {
+        const removeProduct = (id: string) => {
             setProducts(prev => prev.filter(p => p.id !== id));
         };
 
@@ -52,7 +54,7 @@ const ProductForm = forwardRef<ProductFormHandle, object>(
                         <View key={product.id} className='flex-row items-center gap-3 mb-3'>
                             <View className='flex-row items-center flex-1 gap-3'>
                                 <View className='w-12 h-12 overflow-hidden rounded-lg'>
-                                    <Image source={{ uri: product.image }} style={{ width: '100%', height: '100%' }} />
+                                    <Image source={{ uri: product.imageUrl ?? undefined }} style={{ width: '100%', height: '100%' }} />
                                 </View>
                                 <View className='flex-1 gap-1'>
                                     <Text className={`font-Inter font-medium text-primary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>{product.name}</Text>

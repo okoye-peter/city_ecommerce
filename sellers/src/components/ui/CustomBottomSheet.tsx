@@ -33,8 +33,6 @@ const CustomBottomSheet = forwardRef<BottomSheetModal, CustomBottomSheetProps>((
             enableDynamicSizing={false}
             backdropComponent={renderBackdrop}
             handleIndicatorStyle={styles.handleIndicator}
-            keyboardBehavior="extend"
-            keyboardBlurBehavior="restore"
             android_keyboardInputMode="adjustResize"
             {...rest}
         >

@@ -8,11 +8,11 @@ import Entypo from '@expo/vector-icons/Entypo';
 import { formatCompactNumber } from '@/src/utils/priceFormatter';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import ProductCard from '@/src/features/shop/components/ProductCard';
-import EditProductBottomSheet from '@/src/features/shop/components/EditOrAddProductBottomSheet';
 import { Link, useRouter } from 'expo-router';
 import { selectStore, useAuthStore } from '../../auth/store/authStore';
 import { useGetProducts, useGetUserStoreSummary } from '../queries';
 import { format } from 'date-fns';
+import { Product } from '@/src/types';
 
 
 const rating = 4.8;
@@ -22,7 +22,6 @@ const ItemSeparator = () => <View className='h-4' />;
 const ShopScreen = () => {
     const router = useRouter();
 
-    const [isAddBottomSheetOpen, setIsAddBottomSheetOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -123,7 +122,7 @@ const ShopScreen = () => {
                     </Pressable>
                 </Link>
 
-                <View className='flex-row gap-2'>
+                <View className='flex-row items-center gap-2'>
                     {
                         (storeData?.store.categories?.slice(0, 2) ?? []).map(({ id, category }) =>
                             (<Text key={`store_cat_${id}`} className={`${Platform.OS === 'ios' ? 'text-sm' : 'text-base'} px-2 py-1 rounded-lg text-secondary bg-secondary/10 font-normal font-Inter`}>{category.name}</Text>)
@@ -141,7 +140,7 @@ const ShopScreen = () => {
                             {isLoading ? 'Products' : `Products (${total})`}
                         </Text>
                         <Pressable
-                            onPress={() => setIsAddBottomSheetOpen(true)}
+                            onPress={() => router.push('/(auth)/Shop/AddOrEditProductScreen')}
                             className='flex-row items-center gap-2 px-4 py-2 rounded-full bg-primary'
                         >
                             <AntDesign name="plus" size={14} color="white" />
@@ -149,13 +148,10 @@ const ShopScreen = () => {
                         </Pressable>
                     </View>
                 )}
-                renderItem={({ item }) => (
+                renderItem={({ item }: {item: Product}) => (
                     <View className='px-6'>
                         <ProductCard
-                            image={item.imageUrl ?? ''}
-                            name={item.name}
-                            price={item.price}
-                            quantity={item.isAvailable ? 1 : 0}
+                            product={item}
                         />
                     </View>
                 )}
@@ -204,11 +200,6 @@ const ShopScreen = () => {
                 className='flex-1'
             />
 
-            {isAddBottomSheetOpen && (
-                <EditProductBottomSheet
-                    onClose={() => setIsAddBottomSheetOpen(false)}
-                />
-            )}
         </SafeAreaView>
     )
 }

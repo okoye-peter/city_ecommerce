@@ -1,6 +1,7 @@
 import { prisma } from "@/config/database";
 import { ApiError } from "@/utils/ApiError";
-import { Product, Role } from "@prisma/client";
+import { CreateProductSchemaType } from "@/validators/product.validator";
+import { Prisma, Product, Role } from "@prisma/client";
 
 export const getProducts = async (
     searchQuery = '',
@@ -77,7 +78,7 @@ export const updateProduct = async (userId: string, productId: string, productDa
     if(!category)
         throw ApiError.badRequest('Invalid category selected');
 
-    prisma.product.update({
+    await prisma.product.update({
         where: {
             id: BigInt(productId),
             store: { ownerId: BigInt(userId) }
@@ -89,6 +90,37 @@ export const updateProduct = async (userId: string, productId: string, productDa
             updatedAt: new Date()
         }
     })
+}
+
+export const bulkCreateProducts = async (
+    storeId: bigint,
+    products: CreateProductSchemaType[],
+    tx?: Prisma.TransactionClient,
+) => {
+    const client = tx ?? prisma;
+    return client.product.createMany({
+        data: products.map((product) => ({ ...product, storeId })),
+    });
+};
+
+export const createProduct = async (userId: string, productData:CreateProductSchemaType) => {
+    const store = await prisma.store.findFirst({
+        where: { ownerId: BigInt(userId) },
+        include: { user: true }
+    });
+
+    if (!store || store.user.role !== Role.SELLER) {
+        throw ApiError.forbidden('User not authorized');
+    }
+
+    const category = await prisma.category.findFirst({ where: { id: productData.categoryId } });
+
+    if (!category)
+        throw ApiError.badRequest('Invalid category selected');
+
+    return prisma.product.create({
+        data: { ...productData, storeId: store.id }
+    });
 }
 
 export const deleteProduct = async (userId: string, productId: string) => {

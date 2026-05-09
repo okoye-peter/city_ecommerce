@@ -1,7 +1,8 @@
-import * as productService from "@/services/product.sevice";
+import * as productService from "@/services/product.service";
 import { catchAsync } from "@/utils/catchAsync";
 import { ApiResponse } from "@/utils/ApiResponse";
 import { Request, Response } from 'express';
+import { CreateProductSchemaType } from "@/validators/product.validator";
 
 export const getPaginatedProducts = catchAsync(async (req: Request, res: Response) => {
     const search = req.query.search as string | undefined;
@@ -21,6 +22,14 @@ export const getProductDetails = catchAsync(async (req: Request, res: Response) 
     
     const product = await productService.getProductDetails(user!.id, productId, user!.role)
     ApiResponse.success(res, product, 'product retrieved successfully');
+})
+
+export const createProduct = catchAsync(async (req: Request, res: Response) => {
+    const productData: CreateProductSchemaType = req.body;
+    const user = req.user;
+    const product = await productService.createProduct(user!.id, productData)
+
+    return ApiResponse.success(res, product, 'product created successfully');
 })
 
 export const updateProduct = catchAsync(async (req: Request, res: Response) => {
