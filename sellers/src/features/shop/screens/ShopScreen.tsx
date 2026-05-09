@@ -122,7 +122,7 @@ const ShopScreen = () => {
                     </Pressable>
                 </Link>
 
-                <View className='flex-row gap-2'>
+                <View className='flex-row items-center gap-2'>
                     {
                         (storeData?.store.categories?.slice(0, 2) ?? []).map(({ id, category }) =>
                             (<Text key={`store_cat_${id}`} className={`${Platform.OS === 'ios' ? 'text-sm' : 'text-base'} px-2 py-1 rounded-lg text-secondary bg-secondary/10 font-normal font-Inter`}>{category.name}</Text>)
