@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Modal } from 'react-native';
 import Animated, { 
     useAnimatedStyle, 
     useSharedValue, 
@@ -47,23 +47,23 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ isVisible }) => {
         };
     });
 
-    if (!isVisible) return null;
-
     return (
-        <View style={styles.container}>
-            {/* The Rotating Circle */}
-            <Animated.View style={[styles.spinner, animatedRotation]} />
-            
-            {/* The Pulsing Logo */}
-            <Animated.View style={[styles.logoContainer, animatedScale]}>
-                <Image
-                    source={require('../../../assets/images/Logomark.png')}
-                    style={styles.logo}
-                    contentFit="contain"
-                    transition={300}
-                />
-            </Animated.View>
-        </View>
+        <Modal visible={isVisible} transparent animationType="fade" statusBarTranslucent>
+            <View style={styles.container}>
+                {/* The Rotating Circle */}
+                <Animated.View style={[styles.spinner, animatedRotation]} />
+
+                {/* The Pulsing Logo */}
+                <Animated.View style={[styles.logoContainer, animatedScale]}>
+                    <Image
+                        source={require('../../../assets/images/Logomark.png')}
+                        style={styles.logo}
+                        contentFit="contain"
+                        transition={300}
+                    />
+                </Animated.View>
+            </View>
+        </Modal>
     );
 };
 

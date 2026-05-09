@@ -118,13 +118,13 @@ export default function ViewStoreDetailsScreen() {
                 {/* Details Card */}
                 <View className='bg-white -mt-8 rounded-t-[32px] pt-6 pb-10 flex-1'>
                     {/* Description Section */}
-                    <View className='flex-row items-start justify-between px-6 mb-4'>
-                        <Text className={`text-primary font-normal ${Platform.OS === 'ios' ? 'text-xl' : 'text-2xl'}`}>{storeDetails?.description}</Text>
+                    <View className='flex-row items-center justify-between px-6 mb-3'>
+                        <Text className={`text-primary font-normal ${Platform.OS === 'ios' ? 'text-xl' : 'text-2xl'}`}>About</Text>
                         <Pressable
                             className='p-1'
                             onPress={() => router.push('/(auth)/Shops/EditStoreDetailsScreen')}
                         >
-                            <Feather name="edit-3" size={22} color="#757575" />
+                            <Feather name="edit-3" size={18} color="#757575" />
                         </Pressable>
                     </View>
                     <Text className={`text-secondary ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'} leading-6 mb-4 px-6`}>

@@ -1,6 +1,6 @@
 import { prisma } from "@/config/database";
 import type { CreateStoreSchemaType, UpdateStoreSchemaType } from "../validators/store.validator";
-import type { CreateProductSchemaType } from "@/validators/product.validator";
+import { bulkCreateProducts } from "./product.service";
 import { ApiError } from "@/utils/ApiError";
 import { createUserWallet } from "./wallet.service";
 import { deleteUpload } from "@/utils/cloudinary";
@@ -80,12 +80,7 @@ export const createStore = async (
     });
 
     if (products) {
-      await tx.product.createMany({
-        data: products.map((product: CreateProductSchemaType) => ({
-          ...product,
-          storeId: store.id,
-        })),
-      });
+      await bulkCreateProducts(store.id, products, tx);
     }
 
     await tx.userBank.create({
@@ -177,7 +172,6 @@ export const updateStore = async (userId: string, data: UpdateStoreSchemaType) =
 
   const { categoryIds, ...fields } = data;
   const oldImageUrl = store.imageUrl;
-  const imageChanged = fields.imageUrl !== undefined && fields.imageUrl !== oldImageUrl;
 
   const updatedStore = await prisma.$transaction(async (tx) => {
     if (categoryIds !== undefined) {
@@ -196,7 +190,7 @@ export const updateStore = async (userId: string, data: UpdateStoreSchemaType) =
     });
   });
 
-  if (imageChanged && oldImageUrl) {
+  if (oldImageUrl && fields.imageUrl && fields.imageUrl !== oldImageUrl) {
     const publicId = extractPublicId(oldImageUrl);
     if (publicId) await deleteUpload(publicId).catch(() => {});
   }

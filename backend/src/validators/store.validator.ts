@@ -1,5 +1,5 @@
 import z from "zod";
-import { productSchema } from "./product.validator";
+import { productBody } from "./product.validator";
 import { bankSchema } from "./bank.validator";
 
 const dayEnum = z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']);
@@ -11,7 +11,7 @@ export const createStoreSchema = z.object({
     description: z.string().max(1000).optional(),
     marketId: z.coerce.number().int().positive(),
     categoryIds: z.array(z.coerce.number().int().positive()).optional(),
-    products: z.array(productSchema).optional(),
+    products: z.array(productBody).optional(),
     bank: bankSchema,
     openDays: z.array(dayEnum).optional(),
     openingTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),

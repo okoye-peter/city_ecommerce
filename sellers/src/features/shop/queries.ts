@@ -1,7 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getProducts, GetProductsParams, getStoreSummary, updateStore } from './api';
-import { storeUpdateFormData } from '@/src/types';
+import { createProduct, deleteProduct, getProducts, GetProductsParams, getStoreSummary, updateProduct, updateStore } from './api';
+import { createOrUpdateProductDataFormDataSchema, storeUpdateFormDataSchema } from '@/src/types';
 import { useAuthStore } from '../auth/store/authStore';
+import { CreateOrUpdateProductSchemaType } from './shopSchema';
 
 export const useGetProducts = (params: Omit<GetProductsParams, 'page'> = {}) =>
     useInfiniteQuery({
@@ -17,7 +18,7 @@ export const useGetUserStoreSummary = () =>
         queryKey: ['auth-user-store-summary']
     });
 
-export const useUpdateStore = (storeData: storeUpdateFormData) => {
+export const useUpdateStore = (storeData: storeUpdateFormDataSchema) => {
     const queryClient = useQueryClient();
     const setStore = useAuthStore((s) => s.setStore);
 
@@ -29,3 +30,38 @@ export const useUpdateStore = (storeData: storeUpdateFormData) => {
         },
     });
 };
+
+export const useCreateProduct = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (productData: CreateOrUpdateProductSchemaType) => createProduct(productData),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['shop-products'] });
+        }
+    })
+}
+
+export const useUpdateProduct = (productId: string) => {
+    const queryClient = useQueryClient();
+
+    console.log('useUpdateProduct', productId)
+
+    return useMutation({
+        mutationFn: (productData: CreateOrUpdateProductSchemaType) => updateProduct(productId, productData),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['shop-products'] });
+        }
+    })
+}
+
+export const useDeleteProduct = (productId: string) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: () => deleteProduct(productId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['shop-products'] });
+        }
+    })
+}

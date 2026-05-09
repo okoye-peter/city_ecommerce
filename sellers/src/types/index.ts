@@ -161,6 +161,14 @@ export interface Product {
     updatedAt: string;
 }
 
+export interface createOrUpdateProductDataFormDataSchema {
+    name: string;
+    description: string ;
+    imageUrl: string;
+    isAvailable: boolean;
+    categoryId: string;
+}
+
 export interface GetProductsParams {
     page?: number;
     limit?: number;
@@ -257,18 +265,9 @@ export interface OrderItem {
 }
 
 // Form types
-export interface ProductItem {
-    id: number;
-    name: string;
-    price: number;
-    description: string;
-    image: string;
-    categoryId: string;
-}
-
 export interface ProductFormHandle {
     validate: () => boolean;
-    getData: () => { products: ProductItem[] };
+    getData: () => { products: Product[] };
 }
 
 export interface ShopFormData {
@@ -298,7 +297,7 @@ export interface BankFormHandle {
 }
 
 export type daysEnum = 'MONDAY'| 'TUESDAY'| 'WEDNESDAY'| 'THURSDAY'| 'FRIDAY'| 'SATURDAY'| 'SUNDAY'
-export interface storeUpdateFormData { 
+export interface storeUpdateFormDataSchema { 
     name: string;
     imageUrl: string;
     description: string;
