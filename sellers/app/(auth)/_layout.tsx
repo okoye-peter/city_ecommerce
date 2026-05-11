@@ -1,34 +1,42 @@
-import React from 'react'
-import { Stack, Redirect, useSegments } from 'expo-router'
+import React, { useEffect, useRef } from 'react'
+import { Stack, useSegments, useRouter } from 'expo-router'
 import { useAuthStore, selectUser, selectStore } from '@/src/features/auth/store/authStore'
 
-
-
 const AuthRootLayout = () => {
-    // const logout = useAuthStore(s => s.logout)
-    // logout()
+    const router = useRouter()
+    // const logout = useAuthStore(s => s.logout);
+    // logout();
+    // router.replace('/(guest)/SignInScreen');
     const user = useAuthStore(selectUser)
     const store = useAuthStore(selectStore)
     const segments = useSegments()
     
 
-    if (!user) return <Redirect href="/(guest)/SignInScreen" />
+    const segmentsRef = useRef(segments)
+    segmentsRef.current = segments
 
-    if (!user.isVerified) {
-        return <Redirect href={{ pathname: '/(guest)/EmailVerificationScreen', params: { email: user.email } }} />
-    }
+    useEffect(() => {
+        const segs = segmentsRef.current
+        const onIdentityFlow = segs.some((s: string) => s === 'IdentityVerification')
+        const onStoreSetup = segs.some((s: string) => s === 'Shops')
 
-    const needsIdentity = !user.verificationType || !user.verificationId
-    const onIdentityFlow = segments.some((s: string) => s === 'IdentityVerification')
-
-    if (needsIdentity && !onIdentityFlow) {
-        return <Redirect href="/(auth)/IdentityVerification/VerifyIdentityScreen" />
-    }
-
-    const onStoreSetup = segments.some((s: string) => s === 'Shops')
-    if (!store && !onStoreSetup) {
-        return <Redirect href="/(auth)/Shops/StoreSetupScreen" />
-    }
+        if (!user) {
+            router.replace('/(guest)/SignInScreen')
+            return
+        }
+        if (!user.isVerified) {
+            router.replace({ pathname: '/(guest)/EmailVerificationScreen', params: { email: user.email } })
+            return
+        }
+        const needsIdentity = !user.verificationType || !user.verificationId
+        if (needsIdentity && !onIdentityFlow) {
+            router.replace('/(auth)/IdentityVerification/VerifyIdentityScreen')
+            return
+        }
+        if (!store && !onStoreSetup && !needsIdentity) {
+            router.replace('/(auth)/Shops/StoreSetupScreen')
+        }
+    }, [user, store, router])
 
     return <Stack screenOptions={{ headerShown: false }} />
 }

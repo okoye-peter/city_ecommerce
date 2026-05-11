@@ -1,9 +1,14 @@
 import { Router } from 'express';
 import * as bankController from '../controllers/bank.controller';
-import { authenticate } from '@/middlewares/auth.middleware';
+import { authenticate, authorize } from '@/middlewares/auth.middleware';
+import { Role } from '@prisma/client';
+import { bankAccountSchema } from '@/validators/bank.validator';
+import { validate } from '@/middlewares/validate.middleware';
 
 
 const router = Router();
+
+router.use(authenticate);
 
 /**
  * @swagger
@@ -41,7 +46,16 @@ const router = Router();
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
-router.get('/', authenticate, bankController.getBanks);
+router.get('/', bankController.getBanks);
+
+
+router.use(authorize(Role.SELLER));
+
+router.get('/user-accounts', bankController.getUserBanks);
+router.post('/user-accounts', validate(bankAccountSchema), bankController.createUserBankAccount);
+router.patch('/user-accounts/:accountBankId', validate(bankAccountSchema), bankController.updateUserBankAccount);
+router.delete('/user-accounts/:accountBankId', bankController.deleteUserBankAccount);
+
 
 
 export default router;

@@ -3,6 +3,8 @@ import React from 'react'
 import { formatPrice } from '@/src/utils/priceFormatter'
 import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
 import Feather from '@expo/vector-icons/Feather';
+import { useGetWallet } from '../queries';
+import Skeleton from '@/src/components/ui/Skeleton';
 
 const Sparkline = ({ trend }: { trend: 'up' | 'down' }) => {
     const isUp = trend === 'up';
@@ -29,38 +31,44 @@ const Sparkline = ({ trend }: { trend: 'up' | 'down' }) => {
     );
 };
 
-const EarningSummaryCard = ({ trend = 'up', percentage = 12 }: { trend?: 'up' | 'down', percentage?: number }) => {
-    const isUp = trend === 'up';
+const EarningSummaryCard = () => {
+    const isUp = 'up';
     const trendColor = isUp ? 'text-success-dark' : 'text-error-dark';
     const trendIconColor = isUp ? '#039855' : '#D92D20';
 
+    const { data: wallet, isLoading } = useGetWallet();
+    
+    if(isLoading){
+        return <Skeleton width="100%" height={160} borderRadius={8} />
+    }
+
     return (
-        <View className='bg-light border-border rounded-lg p-4' style={styles.card}>
-            <Text className={`font-normal text-secondary mb-2 ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>Today&apos;s Earnings</Text>
+        <View className='p-4 rounded-lg bg-light border-border' style={styles.card}>
+            <Text className={`font-normal text-secondary mb-2 ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>Earnings</Text>
 
             <View className='flex-row items-end justify-between mt-4'>
                 <View>
                     <Text className={`font-semibold text-primary mb-1 ${Platform.OS === 'ios' ? 'text-2xl' : 'text-3xl'}`}>
-                        {formatPrice(117000)}
+                        {formatPrice((wallet?.availableBalance || 0) + (wallet?.escrowBalance || 0))}
                     </Text>
 
                     <View className='flex-row items-center'>
                         <Feather name={isUp ? "trending-up" : "trending-down"} size={16} color={trendIconColor} />
                         <Text className={`ml-1 font-inter-semibold ${trendColor} ${Platform.OS === 'ios' ? 'text-xs' : 'text-sm'}`}>
-                            {isUp ? '+' : '-'}{percentage}% from yesterday
+                            {isUp ? '+' : '-'}5% from yesterday
                         </Text>
                     </View>
                 </View>
 
                 <View className='pb-1'>
-                    <Sparkline trend={trend} />
+                    <Sparkline trend={'up'} />
                 </View>
             </View>
 
-            <View className='flex-row justify-between border-border border-t mt-3  pt-3'>
-                <Text className={`font-normal text-primary ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>Available: {formatPrice(50000)}</Text>
+            <View className='flex-row justify-between pt-3 mt-3 border-t border-border'>
+                <Text className={`font-normal text-primary ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>Available: {formatPrice(wallet?.availableBalance)}</Text>
 
-                <Text className={`font-normal text-secondary ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>In Escrow: {formatPrice(50000)}</Text>
+                <Text className={`font-normal text-secondary ${Platform.OS === 'ios' ? 'text-sm' : 'text-base'}`}>In Escrow: {formatPrice(wallet?.escrowBalance)}</Text>
             </View>
         </View>
     )

@@ -9,7 +9,7 @@ import {
     Pressable,
     StyleSheet,
 } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { StatusBar } from 'expo-status-bar'
@@ -109,15 +109,15 @@ const Register = () => {
         transform: [{ translateX: contentX.value }],
     }))
 
-    const handleBack = () => {
+    const handleBack = useCallback(() => {
         if (step > 1) {
             animateToStep(1)
         } else {
             router.back()
         }
-    }
+    }, [step, router])
 
-    const handleStepOneNext = () => {
+    const handleStepOneNext = useCallback(() => {
         const result = registrationStepOneSchema.safeParse({ firstName, lastName, email })
         if (!result.success) {
             const fieldErrors: Record<string, string> = {}
@@ -130,9 +130,9 @@ const Register = () => {
         }
         setErrors({})
         animateToStep(2)
-    }
+    }, [firstName, lastName, email])
 
-    const handleRegistration = async () => {
+    const handleRegistration = useCallback(async () => {
         const result = registrationStepTwoSchema.safeParse({ password, confirmPassword })
         if (!result.success) {
             const fieldErrors: Record<string, string> = {}
@@ -155,7 +155,6 @@ const Register = () => {
            
             router.replace({ pathname: '/(guest)/SignInScreen'})
         } catch (error: any) {
-            
             const message = isAxiosError(error) ? error?.response?.data?.message : 'Registration failed. Please try again.'
             Toast.show({
                 type: 'error',
@@ -163,9 +162,8 @@ const Register = () => {
                 text2: message,
                 swipeable: true,
             })
-            // setErrors({ general: message })
         }
-    }
+    }, [firstName, lastName, email, password, confirmPassword, register, router])
 
     return (
         <>
@@ -498,7 +496,6 @@ const Register = () => {
                 </KeyboardAvoidingView>
             </View>
 
-            <LoadingOverlay isVisible={isPending} />
         </>
     )
 }

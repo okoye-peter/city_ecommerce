@@ -9,10 +9,7 @@ export const useSignIn = () => {
     const setSession = useAuthStore(s => s.setSession)
     return useMutation({
         mutationFn: signIn,
-        onSuccess: async (data) => {
-            console.log('SignIn successful, setting session with data:', data)
-            await setSession(data)
-        }
+        onSuccess: async (data) => await setSession(data)
     })
 }
 

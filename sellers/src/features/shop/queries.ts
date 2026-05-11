@@ -42,22 +42,23 @@ export const useCreateProduct = () => {
     })
 }
 
-export const useUpdateProduct = (productId: string) => {
+export const useUpdateProduct = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (productData: CreateOrUpdateProductSchemaType) => updateProduct(productId, productData),
+        mutationFn: ({ productId, productData }: { productId: string; productData: CreateOrUpdateProductSchemaType }) => 
+            updateProduct(productId, productData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['shop-products'] });
         }
     })
 }
 
-export const useDeleteProduct = (productId: string) => {
+export const useDeleteProduct = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: () => deleteProduct(productId),
+        mutationFn: (productId: string) => deleteProduct(productId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['shop-products'] });
         }

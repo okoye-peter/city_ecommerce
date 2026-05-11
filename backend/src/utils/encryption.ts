@@ -11,6 +11,11 @@ export function encrypt(value: string): string {
 }
 
 export function decrypt(encrypted: string): string {
-    const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(env.ENCRYPTION_KEY), IV);
-    return Buffer.concat([decipher.update(Buffer.from(encrypted, 'hex')), decipher.final()]).toString('utf8');
+    try {
+        const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(env.ENCRYPTION_KEY), IV);
+        return Buffer.concat([decipher.update(Buffer.from(encrypted, 'hex')), decipher.final()]).toString('utf8');
+    } catch (error) {
+        // Fallback for unencrypted legacy data
+        return encrypted;
+    }
 }

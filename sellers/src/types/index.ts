@@ -27,7 +27,7 @@ export type OrderGroupStatus =
 export type TransactionType = 'credit' | 'debit';
 
 export interface Bank {
-  id: bigint;
+  id: string;
   name: string;
   createdAt: Date;
   updatedAt: Date;
@@ -68,8 +68,8 @@ export interface OrderGroup {
 
 export interface Order {
   id: string;
-  orderGroupId: bigint;
-  productId: bigint;
+  orderGroupId: string;
+  productId: string;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
@@ -324,4 +324,65 @@ export interface storeUpdateFormDataSchema {
   openDays: daysEnum[];
   openingTime: string;
   closingTime: string;
+}
+
+export interface GetTransactionParams {
+    page?: number;
+    limit?: number;
+    from?: string;
+    to?: string;
+    order?: 'asc' | 'desc';
+}
+
+export type SellerTransactionType = 'ESCROW_CREDIT' | 'ESCROW_RELEASE' | 'WITHDRAWAL';
+export type WithdrawalStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
+
+export interface SellerTransaction {
+    id: string;
+    walletId: string;
+    amount: number;
+    type: SellerTransactionType;
+    status?: WithdrawalStatus;
+    reference: string;
+    description?: string;
+    userBankId?: string;
+    createdAt: string;
+    userBank?: BankAccount
+}
+
+export interface PaginatedResponse<T> {
+    data: T[];
+    meta: { page: number; limit: number; total: number; totalPages: number };
+    message: string;
+    success: boolean;
+}
+
+export interface SellerWallet {
+    id: string;
+    storeId: string;
+    escrowBalance: number;
+    availableBalance: number;
+    totalEarnings: number;
+    createdAt: Date;
+    updatedAt: Date;
+} 
+// {
+//     id: string;
+//     userId: string;
+//     creditBalance: number;
+//     createdAt: Date;
+//     updatedAt: Date;
+// } | null | undefined
+
+export interface BankAccount {
+    id: string,
+    accountNumber: string;
+    bankId: string;
+    isSelected: boolean;
+    bank?: Bank
+}
+
+export interface CreateBankAccount {
+  accountNumber: string;
+  bankId: string;
 }

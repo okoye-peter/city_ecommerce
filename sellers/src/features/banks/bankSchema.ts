@@ -1,12 +1,8 @@
-import z from "zod";
+import { z } from "zod";
 
 export const bankSchema = z.object({
-    bankId: z.coerce.number().int().positive(),
+    bankId: z.string().min(1, "Bank is required"),
     accountNumber: z.string().regex(/^\d{10}$/, "Account number must be exactly 10 digits"),
-})
-
-export const bankAccountSchema = z.object({
-    body: bankSchema
 })
 
 export type bankSchemaType = z.infer<typeof bankSchema>;
