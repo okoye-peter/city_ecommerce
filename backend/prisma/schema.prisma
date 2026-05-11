@@ -26,13 +26,14 @@ model User {
     emailVerifyOtpExpiry   DateTime?
     passwordResetOtp       String?
     passwordResetOtpExpiry DateTime?
+    transactionPin         String?
     createdAt              DateTime          @default(now())
     updatedAt              DateTime          @updatedAt
 
-    store      Store?
-    userBanks  UserBank[]
-    orders     OrderGroup[]
-    wallet     UserWallet?
+    store     Store?
+    userBanks UserBank[]
+    orders    OrderGroup[]
+    wallet    UserWallet?
 
     @@index([email])
     @@index([googleId])
@@ -72,8 +73,8 @@ model Store {
     ownerId     BigInt   @unique
     marketId    BigInt?
     openDays    Day[]    @default([])
-    openingTime String?  // "HH:mm" e.g. "09:00"
-    closingTime String?  // "HH:mm" e.g. "17:30"
+    openingTime String? // "HH:mm" e.g. "09:00"
+    closingTime String? // "HH:mm" e.g. "17:30"
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
@@ -104,7 +105,7 @@ model Product {
     id          BigInt   @id @default(autoincrement())
     name        String
     description String?
-    price       Float
+    price       Decimal  @db.Decimal(12, 2)
     imageUrl    String?
     storeId     BigInt
     isAvailable Boolean  @default(true)
@@ -120,10 +121,10 @@ model Product {
 }
 
 model Bank {
-    id                 BigInt   @id @default(autoincrement())
-    name               String   @unique
-    createdAt          DateTime @default(now())
-    updatedAt          DateTime @updatedAt
+    id        BigInt   @id @default(autoincrement())
+    name      String   @unique
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     userBanks UserBank[]
 
@@ -135,24 +136,27 @@ model UserBank {
     userId        BigInt
     bankId        BigInt
     accountNumber String
+    isSelected    Boolean  @default(false)
     createdAt     DateTime @default(now())
     updatedAt     DateTime @updatedAt
 
-    user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-    bank Bank @relation(fields: [bankId], references: [id], onDelete: Cascade)
+    transactions SellerWalletTransaction[]
+    user         User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    bank         Bank                      @relation(fields: [bankId], references: [id], onDelete: Cascade)
 
     @@unique([userId, bankId])
     @@map("user_banks")
 }
 
 model OrderPayments {
-    id           BigInt   @id @default(autoincrement())
+    id           BigInt        @id @default(autoincrement())
     orderGroupId BigInt
-    amount       Float
-    reference    String   @unique
-    status       String
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
+    amount       Decimal       @db.Decimal(12, 2)
+    reference    String        @unique
+    status       PaymentStatus @default(PENDING)
+    provider     String? // e.g., "STRIPE", "PAYSTACK"
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
 
     orderGroup OrderGroup @relation(fields: [orderGroupId], references: [id], onDelete: Cascade)
 
@@ -164,7 +168,8 @@ model OrderGroup {
     refNo       String           @unique
     status      OrderGroupStatus @default(PENDING)
     buyerId     BigInt
-    totalAmount Float
+    totalAmount Decimal          @db.Decimal(12, 2)
+    deliveredAt DateTime? // set when status → DELIVERED; 72h clock starts here
     createdAt   DateTime         @default(now())
     updatedAt   DateTime         @updatedAt
 
@@ -173,6 +178,7 @@ model OrderGroup {
     payments          OrderPayments[]
     walletTransaction WalletTransaction?
 
+    @@index([buyerId])
     @@map("order_groups")
 }
 
@@ -181,18 +187,18 @@ model Order {
     orderGroupId BigInt
     productId    BigInt?
     quantity     Int
-    unitPrice    Float
-    totalPrice   Float
+    unitPrice    Decimal     @db.Decimal(12, 2)
+    totalPrice   Decimal     @db.Decimal(12, 2)
     status       OrderStatus @default(PENDING)
-    deliveredAt  DateTime?   // set when status → DELIVERED; 72h clock starts here
     createdAt    DateTime    @default(now())
     updatedAt    DateTime    @updatedAt
 
-    orderGroup   OrderGroup         @relation(fields: [orderGroupId], references: [id], onDelete: Cascade)
-    product      Product?            @relation(fields: [productId], references: [id], onDelete: SetNull)
-    escrowEntry  SellerEscrowEntry?
-    refund       WalletTransaction? // populated only when status → DECLINED
+    orderGroup  OrderGroup         @relation(fields: [orderGroupId], references: [id], onDelete: Cascade)
+    product     Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+    escrowEntry SellerEscrowEntry?
+    refund      WalletTransaction? // populated only when status → DECLINED
 
+    @@index([orderGroupId])
     @@map("orders")
 }
 
@@ -201,27 +207,44 @@ model Order {
 model SellerWallet {
     id               BigInt   @id @default(autoincrement())
     storeId          BigInt   @unique
-    escrowBalance    Float    @default(0) // delivered but 72h not yet passed
-    availableBalance Float    @default(0) // ready to withdraw
-    totalEarnings    Float    @default(0) // lifetime figure
+    escrowBalance    Decimal  @default(0) @db.Decimal(12, 2) // delivered but 72h not yet passed
+    availableBalance Decimal  @default(0) @db.Decimal(12, 2) // ready to withdraw
     createdAt        DateTime @default(now())
     updatedAt        DateTime @updatedAt
 
-    store         Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+    store         Store                     @relation(fields: [storeId], references: [id], onDelete: Cascade)
     escrowEntries SellerEscrowEntry[]
-    withdrawals   Withdrawal[]
+    transactions  SellerWalletTransaction[]
 
     @@map("seller_wallets")
+}
+
+model SellerWalletTransaction {
+    id          BigInt                      @id @default(autoincrement())
+    walletId    BigInt
+    userBankId  BigInt?
+    amount      Decimal                     @db.Decimal(12, 2)
+    type        SellerWalletTransactionType
+    status      WithdrawalStatus            @default(COMPLETED)
+    description String?
+    reference   String?                     @unique // External withdrawal reference
+    createdAt   DateTime                    @default(now())
+
+    wallet   SellerWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+    userBank UserBank?    @relation(fields: [userBankId], references: [id], onDelete: SetNull)
+
+    @@index([walletId, createdAt(sort: Desc)])
+    @@map("seller_wallet_transactions")
 }
 
 model SellerEscrowEntry {
     id          BigInt       @id @default(autoincrement())
     walletId    BigInt
-    orderId     BigInt       @unique  // DB-level duplicate guard — one entry per order
-    amount      Float
+    orderId     BigInt       @unique // DB-level duplicate guard — one entry per order
+    amount      Decimal      @db.Decimal(12, 2)
     status      EscrowStatus @default(HELD)
-    deliveredAt DateTime     // copied from Order.deliveredAt; 72h is measured from here
-    releasedAt  DateTime?    // set by the background job when funds move to availableBalance
+    deliveredAt DateTime // copied from OrderGroup.deliveredAt; 72h is measured from here
+    releasedAt  DateTime? // set by the background job when funds move to availableBalance
     createdAt   DateTime     @default(now())
     updatedAt   DateTime     @updatedAt
 
@@ -231,25 +254,12 @@ model SellerEscrowEntry {
     @@map("seller_escrow_entries")
 }
 
-model Withdrawal {
-    id        BigInt           @id @default(autoincrement())
-    walletId  BigInt
-    amount    Float
-    status    WithdrawalStatus @default(PENDING)
-    createdAt DateTime         @default(now())
-    updatedAt DateTime         @updatedAt
-
-    wallet SellerWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
-
-    @@map("withdrawals")
-}
-
 // ─── Buyer wallet (store credit for refunds on declined orders) ───────────────
 
 model UserWallet {
     id            BigInt   @id @default(autoincrement())
     userId        BigInt   @unique
-    creditBalance Float    @default(0)
+    creditBalance Decimal  @default(0) @db.Decimal(12, 2)
     createdAt     DateTime @default(now())
     updatedAt     DateTime @updatedAt
 
@@ -259,13 +269,15 @@ model UserWallet {
     @@map("user_wallets")
 }
 
+// for buyers
 model WalletTransaction {
     id           BigInt                @id @default(autoincrement())
     walletId     BigInt
     orderId      BigInt?               @unique // REFUND — one refund per declined order
     orderGroupId BigInt?               @unique // PURCHASE_DEDUCTION — one deduction per checkout
-    amount       Float
+    amount       Decimal               @db.Decimal(12, 2)
     type         WalletTransactionType
+    description  String?
     createdAt    DateTime              @default(now())
 
     wallet     UserWallet  @relation(fields: [walletId], references: [id], onDelete: Cascade)
@@ -307,8 +319,10 @@ enum OrderStatus {
 }
 
 enum EscrowStatus {
-    HELD      // delivered, 72h not yet passed
-    RELEASED  // moved to availableBalance by the background job
+    HELD // delivered, 72h not yet passed
+    RELEASED // moved to availableBalance by the background job
+    REFUNDED
+    DISPUTED
 }
 
 enum WithdrawalStatus {
@@ -319,8 +333,14 @@ enum WithdrawalStatus {
 }
 
 enum WalletTransactionType {
-    REFUND             // credited to buyer when seller declines a paid order
+    REFUND // credited to buyer when seller declines a paid order
     PURCHASE_DEDUCTION // debited when buyer uses credit on a new order
+}
+
+enum SellerWalletTransactionType {
+    ESCROW_CREDIT // order delivered → funds enter escrow
+    ESCROW_RELEASE // 72h passed → funds move to availableBalance
+    WITHDRAWAL // seller withdraws funds
 }
 
 enum Day {
@@ -331,4 +351,11 @@ enum Day {
     FRIDAY
     SATURDAY
     SUNDAY
+}
+
+enum PaymentStatus {
+    PENDING
+    SUCCESS
+    FAILED
+    REVERSED
 }

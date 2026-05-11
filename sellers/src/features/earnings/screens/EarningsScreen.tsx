@@ -1,5 +1,5 @@
-import { View, Text, Platform, FlatList, Pressable, Modal } from 'react-native'
-import React, { useMemo, useState } from 'react'
+import { View, Text, Platform, FlatList, Pressable, Modal, ActivityIndicator, RefreshControl } from 'react-native'
+import React, { useCallback, useMemo, useState } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import SafeAreaView from '@/src/components/ui/NativeStyledSafeAreaView'
 
@@ -9,82 +9,8 @@ import { formatPrice } from '@/src/utils/priceFormatter';
 import TransactionCard from '@/src/features/earnings/components/TransactionCard';
 import { useRouter } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
-
-interface Transaction {
-    id: string;
-    title: string;
-    createdAt: string;
-    amount: number;
-    type: 'sale' | 'withdrawal';
-    status: 'pending' | 'success' | 'failed';
-}
-
-const TRANSACTIONS: Transaction[] = [
-    {
-        id: '1',
-        title: 'Sale - Leather Bucket Bag',
-        createdAt: '2026-04-15 12:36:38',
-        amount: 23750,
-        type: 'sale',
-        status: 'pending',
-    },
-    {
-        id: '2',
-        title: 'Platform fee (5%)',
-        createdAt: '2026-04-15 12:36:38',
-        amount: 1250,
-        type: 'withdrawal',
-        status: 'success',
-    },
-    {
-        id: '3',
-        title: 'Sale - Premium Ankara Wax Print - 6 Yards',
-        createdAt: '2026-04-14 09:12:45',
-        amount: 14250,
-        type: 'sale',
-        status: 'failed',
-    },
-    {
-        id: '4',
-        title: 'Platform fee (5%)',
-        createdAt: '2026-04-14 15:40:22',
-        amount: 750,
-        type: 'withdrawal',
-        status: 'pending',
-    },
-    {
-        id: '5',
-        title: 'Sale - Premium Ankara Wax Print - 6 Yards',
-        createdAt: '2026-04-13 11:20:10',
-        amount: 14250,
-        type: 'sale',
-        status: 'success',
-    },
-    {
-        id: '6',
-        title: 'Platform fee (5%)',
-        createdAt: '2026-04-13 18:05:55',
-        amount: 750,
-        type: 'withdrawal',
-        status: 'failed',
-    },
-    {
-        id: '7',
-        title: 'Sale - Premium Ankara Wax Print - 6 Yards',
-        createdAt: '2026-04-12 14:15:30',
-        amount: 14250,
-        type: 'sale',
-        status: 'pending',
-    },
-    {
-        id: '8',
-        title: 'Platform fee (5%)',
-        createdAt: '2026-04-12 20:30:15',
-        amount: 750,
-        type: 'withdrawal',
-        status: 'success',
-    },
-];
+import { useGetWalletTransactions, useGetWallet } from '../queries';
+import { SellerTransaction } from '@/src/types';
 
 type SortOrder = 'desc' | 'asc';
 type ActivePicker = 'start' | 'end' | null;
@@ -98,6 +24,38 @@ const EarningsScreen = () => {
     const [activePicker, setActivePicker] = useState<ActivePicker>(null);
     const [tempDate, setTempDate] = useState<Date>(new Date());
 
+    const queryParams = useMemo(() => ({
+        limit: 20,
+        from: startDate ? startDate.toISOString() : undefined,
+        to: endDate ? endDate.toISOString() : undefined,
+        order: sortOrder,
+    }), [startDate, endDate, sortOrder]);
+
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        isError,
+        refetch,
+        isRefetching,
+    } = useGetWalletTransactions(queryParams);
+
+    const { refetch: refetchWallet, isRefetching: isRefetchingWallet } = useGetWallet();
+
+    const handleRefresh = useCallback(async () => {
+        await Promise.all([
+            refetch(),
+            refetchWallet()
+        ]);
+    }, [refetch, refetchWallet]);
+
+    const transactions = useMemo(
+        () => data?.pages.flatMap(p => p.data) ?? [],
+        [data],
+    );
+
     const formatDateLabel = (date: Date | null, placeholder: string) => {
         if (!date) return placeholder;
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -109,7 +67,8 @@ const EarningsScreen = () => {
         setActivePicker(target);
     };
 
-    const handleValueChange = (_event: unknown, date: Date) => {
+    const handleValueChange = (_event: unknown, date?: Date) => {
+        if (!date) return;
         if (Platform.OS === 'android') {
             setActivePicker(null);
             if (activePicker === 'start') setStartDate(date);
@@ -118,8 +77,6 @@ const EarningsScreen = () => {
             setTempDate(date);
         }
     };
-
-    const handleDismiss = () => setActivePicker(null);
 
     const confirmIOSPicker = () => {
         if (activePicker === 'start') setStartDate(tempDate);
@@ -132,30 +89,48 @@ const EarningsScreen = () => {
         setEndDate(null);
     };
 
-    const filteredTransactions = useMemo(() => {
-        let result = [...TRANSACTIONS];
-
-        if (startDate) {
-            const start = new Date(startDate);
-            start.setHours(0, 0, 0, 0);
-            result = result.filter(t => new Date(t.createdAt) >= start);
-        }
-
-        if (endDate) {
-            const end = new Date(endDate);
-            end.setHours(23, 59, 59, 999);
-            result = result.filter(t => new Date(t.createdAt) <= end);
-        }
-
-        result.sort((a, b) => {
-            const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-            return sortOrder === 'desc' ? -diff : diff;
-        });
-
-        return result;
-    }, [startDate, endDate, sortOrder]);
-
     const hasDateFilter = startDate !== null || endDate !== null;
+
+    const renderItem = ({ item }: { item: SellerTransaction }) => (
+        <View className="px-6">
+            <TransactionCard transaction={item} />
+        </View>
+    );
+
+    const renderFooter = () => {
+        if (!isFetchingNextPage) return null;
+        return (
+            <View className="items-center py-4">
+                <ActivityIndicator size="small" color="#2C2C2C" />
+            </View>
+        );
+    };
+
+    const renderEmpty = () => {
+        if (isLoading) {
+            return (
+                <View className="items-center py-16">
+                    <ActivityIndicator size="large" color="#2C2C2C" />
+                </View>
+            );
+        }
+        if (isError) {
+            return (
+                <View className="items-center px-6 py-16">
+                    <Text className={`text-secondary text-center ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>
+                        Failed to load transactions. Pull to refresh.
+                    </Text>
+                </View>
+            );
+        }
+        return (
+            <View className="items-center px-6 py-16">
+                <Text className={`text-secondary text-center ${Platform.OS === 'ios' ? 'text-base' : 'text-lg'}`}>
+                    No transactions yet
+                </Text>
+            </View>
+        );
+    };
 
     const renderHeader = () => (
         <View>
@@ -165,10 +140,10 @@ const EarningsScreen = () => {
                 </Text>
             </View>
             <View className='gap-6 px-6 pb-6 border-b-4 border-border/30'>
-                <EarningSummaryCard trend='up' percentage={50} />
+                <EarningSummaryCard />
 
                 <CustomButton
-                    buttonText={`Withdraw ${formatPrice(50000)}`}
+                    buttonText={`Withdraw`}
                     onPressHandler={() => { router.push('/(auth)/Banks/WithdrawalScreen') }}
                 />
             </View>
@@ -228,7 +203,6 @@ const EarningsScreen = () => {
                         mode="date"
                         display="default"
                         onValueChange={handleValueChange}
-                        onDismiss={handleDismiss}
                         maximumDate={new Date()}
                     />
                 )}
@@ -239,23 +213,22 @@ const EarningsScreen = () => {
     return (
         <SafeAreaView edges={['top', 'left', 'right']} className='flex-1 bg-white'>
             <FlatList
-                data={filteredTransactions}
+                data={transactions}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View className="px-6">
-                        <TransactionCard
-                            id={item.id}
-                            title={item.title}
-                            dateTime={item.createdAt}
-                            amount={item.amount}
-                            type={item.type}
-                            status={item.status}
-                        />
-                    </View>
-                )}
+                renderItem={renderItem}
                 ListHeaderComponent={renderHeader}
+                ListFooterComponent={renderFooter}
+                ListEmptyComponent={renderEmpty}
+                onEndReached={() => { if (hasNextPage) fetchNextPage(); }}
+                onEndReachedThreshold={0.5}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 20 }}
+                refreshControl={
+                    <RefreshControl 
+                        refreshing={isRefetching || isRefetchingWallet} 
+                        onRefresh={handleRefresh} 
+                    />
+                }
             />
 
             {Platform.OS === 'ios' && (

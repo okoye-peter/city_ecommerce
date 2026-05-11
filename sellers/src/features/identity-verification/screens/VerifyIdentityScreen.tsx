@@ -1,5 +1,5 @@
 import { View, Text, Platform, ScrollView } from 'react-native'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import SafeAreaView from '@/src/components/ui/NativeStyledSafeAreaView'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
@@ -26,7 +26,7 @@ const VerifyIdentityScreen = () => {
     const [errors, setErrors] = useState<Record<string, string>>({})
     const { mutateAsync: verifyIdentity, isPending } = useVerifyIdentity()
 
-    const handleSubmitIdentity = async () => {
+    const handleSubmitIdentity = useCallback(async () => {
         const result = verifyIdentitySchema.safeParse({ verificationType: selectedId!, verificationId: idNumber })
         if (!result.success) {
             const fieldErrors: Record<string, string> = {}
@@ -43,18 +43,21 @@ const VerifyIdentityScreen = () => {
             await verifyIdentity({ verificationType: selectedId!, verificationId: idNumber })
             router.replace('/(auth)/IdentityVerification/IdentityVerificationSuccessScreen');
         } catch (error: any) {
-            
-            const message = error?.response?.data?.message ?? 'Registration failed. Please try again.'
-            
+            const message = error?.response?.data?.message ?? 'Verification failed. Please try again.'
             Toast.show({
                 type: 'error',
-                text1: 'Registration Error',
+                text1: 'Verification Error',
                 text2: message,
                 swipeable: true,
             })
             setErrors({ general: message })
         }
-    }
+    }, [selectedId, idNumber, verifyIdentity, router])
+
+    const handleIdChange = useCallback((item: any) => {
+        if ('id' in item) setSelectedId(String(item.id));
+        else if ('value' in item) setSelectedId(String(item.value));
+    }, [])
 
     return (
         <>
@@ -88,10 +91,7 @@ const VerifyIdentityScreen = () => {
                             label="What ID do you have?"
                             data={idTypes}
                             value={selectedId}
-                            onChange={(item) => {
-                                if ('id' in item) setSelectedId(String(item.id));
-                                else if ('value' in item) setSelectedId(String(item.value));
-                            }}
+                            onChange={handleIdChange}
                             placeholder="Select an ID type"
                             searchable={true}
                         />

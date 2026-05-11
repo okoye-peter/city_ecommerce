@@ -1,5 +1,5 @@
 import { View, Text, Platform, Pressable } from 'react-native'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import SafeAreaView from '@/src/components/ui/NativeStyledSafeAreaView'
 import { ScrollView } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
@@ -52,10 +52,10 @@ const HomeScreen = () => {
         }
     });
 
-    const toggleTab = (selectedTab: 'online' | 'offline') => {
+    const toggleTab = useCallback((selectedTab: 'online' | 'offline') => {
         setTab(selectedTab);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    };
+    }, []);
 
 
     return (

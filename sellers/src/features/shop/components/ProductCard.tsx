@@ -22,17 +22,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
     const [isImageLoading, setIsImageLoading] = useState(true);
     const [showDeleteProductWarningModal, setShowDeleteProductWarningModal] = useState(false);
 
-    const { mutateAsync: deleteProduct, isPending } = useDeleteProduct(product?.id)
+    const { mutateAsync: deleteProductAsync, isPending } = useDeleteProduct()
 
     const handleDelete = async () => {
         setShowDeleteProductWarningModal(false)
         try {
-            await deleteProduct()
-            Toast.show({
-                type: 'success',
-                text1: 'product deleted successfully',
-                text2: `${product.name} has been deleted successfully`
-            })
+            if (product?.id) {
+                await deleteProductAsync(product.id)
+                Toast.show({
+                    type: 'success',
+                    text1: 'Product deleted successfully',
+                    text2: `${product.name} has been deleted successfully`
+                })
+            }
         } catch (err) {
             Toast.show({
                 type: 'error',

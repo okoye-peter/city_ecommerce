@@ -8,7 +8,7 @@ import {
     KeyboardAvoidingView,
     StyleSheet,
 } from 'react-native'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { Feather } from '@expo/vector-icons'
@@ -61,10 +61,13 @@ const AddOrEditProductScreen = () => {
     const toggleSwitch = useCallback(() => setIsAvailable(prev => !prev), [])
 
     const { mutateAsync: createProductAsync } = useCreateProduct()
-    const { mutateAsync: updateProductAsync } = useUpdateProduct(product?.id ?? '')
+    const { mutateAsync: updateProductAsync } = useUpdateProduct()
     const { categories } = useGetCategories()
 
-    const categoriesData = (categories || []).map((cat) => ({ label: cat.name, value: cat.id }))
+    const categoriesData = useMemo(() => 
+        (categories || []).map((cat) => ({ label: cat.name, value: cat.id })),
+        [categories]
+    )
 
     const launchGallery = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
@@ -106,6 +109,8 @@ const AddOrEditProductScreen = () => {
     }
 
     const handleSubmit = async () => {
+        setErrors({})
+        
         const result = preUploadSchema.safeParse({
             name,
             description,
@@ -142,8 +147,14 @@ const AddOrEditProductScreen = () => {
 
             const productData = { ...result.data!, imageUrl: finalImageUrl }
 
-            if (isEdit) await updateProductAsync(productData)
-            else await createProductAsync(productData)
+            if (isEdit) {
+                await updateProductAsync({ 
+                    productId: product.id, 
+                    productData 
+                })
+            } else {
+                await createProductAsync(productData)
+            }
 
             Toast.show({
                 type: 'success',

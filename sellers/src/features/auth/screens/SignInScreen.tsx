@@ -9,7 +9,7 @@ import {
     Pressable,
     StyleSheet,
 } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { StatusBar } from 'expo-status-bar'
@@ -141,29 +141,17 @@ const SignIn = () => {
     const inactivePadding = Math.max(insets.bottom, 24)
 
 
-    const handleGoogleSignIn = async () => {
+    const handleGoogleSignIn = useCallback(async () => {
         try {
-            // On Android, confirms Google Play Services are available before proceeding.
-            // This is a no-op on iOS but safe to call on both platforms.
             await GoogleSignin.hasPlayServices()
-
             const result = await GoogleSignin.signIn()
-
-            // The SDK returns a discriminated union — always check `type` before
-            // reading `data`. 'success' is the only case that has an idToken.
             if (result.type !== 'success') return
-
-            // idToken can be null when Google omits it (e.g. cached sign-in on some
-            // Android versions). Treat it the same as a non-success result.
             if (!result.data.idToken) return
 
             await googleSignIn(result.data.idToken)
             Toast.show({ type: 'success', text1: 'Login successful', text2: 'Welcome back!', swipeable: true })
             router.replace('/(auth)/(tabs)/HomeScreen')
         } catch (error: any) {
-            // SIGN_IN_CANCELLED: user dismissed the picker — not an error, stay silent.
-            // IN_PROGRESS: another sign-in is already running — ignore.
-            // Any other code is a real failure worth surfacing.
             if (
                 error.code === statusCodes.SIGN_IN_CANCELLED ||
                 error.code === statusCodes.IN_PROGRESS
@@ -172,9 +160,9 @@ const SignIn = () => {
             const message = error?.response?.data?.message ?? 'Google sign in failed. Please try again.'
             Toast.show({ type: 'error', text1: 'Sign In Error', text2: message, swipeable: true })
         }
-    }
+    }, [googleSignIn, router])
 
-    const handleSignIn = async () => {
+    const handleSignIn = useCallback(async () => {
         const result = signInSchema.safeParse({ email, password })
         if (!result.success) {
             const fieldErrors: Record<string, string> = {}
@@ -197,10 +185,6 @@ const SignIn = () => {
             })
             router.replace('/(auth)/(tabs)/HomeScreen')
         } catch (error: any) {
-            console.log('sign in error', {
-                error,
-                response: error?.response
-            })
             const message = error?.response?.data?.message ?? 'Sign in failed. Please try again.'
             Toast.show({
                 type: 'error',
@@ -209,7 +193,7 @@ const SignIn = () => {
                 swipeable: true,
             })
         }
-    }
+    }, [email, password, signIn, router])
 
 
     return (
