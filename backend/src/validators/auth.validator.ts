@@ -23,11 +23,30 @@ export const registerSchema = z.object({
       email: z.string().email().toLowerCase().trim(),
       password: strongPassword,
       passwordConfirmation: z.string().min(1, "Please confirm your password"),
-      role: z.enum(['BUYER', 'SELLER']).default('BUYER'),
+      role: z.enum(['SELLER']).default('SELLER'),
     })
     .refine((d) => d.password === d.passwordConfirmation, {
       message: "Passwords do not match",
       path: ["passwordConfirmation"],
+    }),
+});
+
+export const registerCustomerSchema = z.object({
+  body: z
+    .object({
+      name: z.string().min(1).max(100).trim(),
+      email: z.string().email().toLowerCase().trim(),
+      password: strongPassword,
+      confirmPassword: z.string().min(1, "Please confirm your password"),
+      role: z.enum(['BUYER']).default('BUYER'),
+    })
+    .refine((d) => d.password === d.confirmPassword, {
+      message: "Passwords do not match",
+      path: ["confirmPassword"],
+    })
+    .refine((d) => d.name.trim().split(' ').length >= 2, {
+        message: "Please provide your fullname",
+        path: ["name"],
     }),
 });
 

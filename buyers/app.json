@@ -1,37 +1,54 @@
 {
   "expo": {
-    "name": "my-expo-app",
-    "slug": "my-expo-app",
+    "name": "buyers",
+    "slug": "buyers",
     "version": "1.0.0",
-
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-
-    "experiments": {
-      "tsconfigPaths": true
-    },
-
-    "plugins": [],
-
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-
-    "userInterfaceStyle": "light",
-
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": ["**/*"],
+    "icon": "./src/assets/images/icon.png",
+    "scheme": "buyers",
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "icon": "./src/assets/images/icon.png",
+      "bundleIdentifier": "com.okoyedev.buyers"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./src/assets/images/icon.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.okoyedev.buyers"
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./src/assets/images/icon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./src/assets/images/icon.png",
+          "backgroundColor": "#ffffff",
+          "android": {
+            "image": "./src/assets/images/icon.png",
+            "imageWidth": 150
+          }
+        }
+      ],
+      "@react-native-google-signin/google-signin",
+      "@react-native-community/datetimepicker",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "cf93d576-1ed0-43f5-8c3c-d03ef6897c4d"
       }
     }
   }

@@ -13,6 +13,7 @@ import {
   resetPasswordSchema,
   refreshSchema,
   forgotPasswordVerifyOtpSchema,
+  registerCustomerSchema,
 } from '../validators/auth.validator';
 
 const router = Router();
@@ -45,6 +46,8 @@ const router = Router();
  *         description: Email already in use
  */
 router.post('/register', authLimiter, validate(registerSchema), authController.register);
+
+router.post('/buyers/register', authLimiter, validate(registerCustomerSchema), authController.registerCustomer);
 
 /**
  * @swagger

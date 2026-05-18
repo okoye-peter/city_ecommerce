@@ -1,28 +1,32 @@
-import crypto from 'crypto';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { OAuth2Client } from 'google-auth-library';
-import { Role } from '@prisma/client';
-import { prisma } from '../config/database';
-import { env } from '../config/env';
-import { ApiError } from '../utils/ApiError';
-import { sendVerificationEmail, sendPasswordResetEmail } from './email.service';
-import { createUserWallet } from './wallet.service';
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
+import { Role } from "@prisma/client";
+import { prisma } from "../config/database";
+import { env } from "../config/env";
+import { ApiError } from "../utils/ApiError";
+import { sendVerificationEmail, sendPasswordResetEmail } from "./email.service";
+import { createUserWallet } from "./wallet.service";
 
 const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 
-function generateAccessToken(payload: { id: string; email: string; role: Role }) {
+function generateAccessToken(payload: {
+  id: string;
+  email: string;
+  role: Role;
+}) {
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-    expiresIn: env.JWT_ACCESS_EXPIRY as jwt.SignOptions['expiresIn'],
+    expiresIn: env.JWT_ACCESS_EXPIRY as jwt.SignOptions["expiresIn"],
   });
 }
 
 function generateRefreshToken(payload: { id: string }) {
   return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: env.JWT_REFRESH_EXPIRY as jwt.SignOptions['expiresIn'],
+    expiresIn: env.JWT_REFRESH_EXPIRY as jwt.SignOptions["expiresIn"],
   });
 }
 
@@ -73,13 +77,17 @@ export async function register(input: {
   password: string;
   role?: Role;
 }) {
-  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  const existing = await prisma.user.findUnique({
+    where: { email: input.email },
+  });
 
   if (existing) {
     if (existing.googleId && !existing.password) {
-      throw ApiError.conflict('An account with this email exists. Please sign in with Google.');
+      throw ApiError.conflict(
+        "An account with this email exists. Please sign in with Google.",
+      );
     }
-    throw ApiError.conflict('An account with this email already exists.');
+    throw ApiError.conflict("An account with this email already exists.");
   }
 
   const hashed = await bcrypt.hash(input.password, env.BCRYPT_SALT_ROUNDS);
@@ -92,39 +100,85 @@ export async function register(input: {
         lastName: input.lastName,
         email: input.email,
         password: hashed,
-        role: input.role ?? Role.BUYER,
+        role: Role.SELLER,
         emailVerifyOtp: await hashOtp(otp),
         emailVerifyOtpExpiry: new Date(Date.now() + OTP_TTL_MS),
       },
     });
 
-    if (user.role === Role.BUYER) await createUserWallet(user, tx);
-
     return user;
   });
 
   return {
-    message: 'Registration successful.',
+    message: "Registration successful.",
     email: user.email,
   };
+}
+
+export async function createCustomer(input: {
+  name: string;
+  email: string;
+  password: string;
+  role?: Role;
+}) {
+  const existing = await prisma.user.findUnique({
+    where: { email: input.email },
+  });
+
+  if (existing) {
+    if (existing.googleId && !existing.password) {
+      throw ApiError.conflict(
+        "An account with this email exists. Please sign in with Google.",
+      );
+    }
+    throw ApiError.conflict("An account with this email already exists.");
+  }
+
+  const hashed = await bcrypt.hash(input.password, env.BCRYPT_SALT_ROUNDS);
+  const otp = generateOtp();
+  const names = input.name.split(" ");
+
+  const user = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        firstName: names[0],
+        lastName: names[1],
+        email: input.email,
+        password: hashed,
+        role: Role.BUYER,
+        emailVerifyOtp: await hashOtp(otp),
+        emailVerifyOtpExpiry: new Date(Date.now() + OTP_TTL_MS),
+      },
+    });
+
+    await createUserWallet(user, tx);
+    return user;
+  });
+
+  await sendVerificationEmail(user.email, user.firstName, otp);
+  const tokens = await issueTokens(user.id.toString(), user.email, user.role);
+  const { password: _, ...safeUser } = user;
+  return { user: safeUser, ...tokens };
 }
 
 export async function verifyEmail(email: string, otp: string) {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || !user.emailVerifyOtp || !user.emailVerifyOtpExpiry) {
-    throw ApiError.badRequest('No pending verification for this email.');
+    throw ApiError.badRequest("No pending verification for this email.");
   }
   if (user.isVerified) {
-    throw ApiError.badRequest('Email is already verified.');
+    throw ApiError.badRequest("Email is already verified.");
   }
   if (user.emailVerifyOtpExpiry < new Date()) {
-    throw ApiError.badRequest('Verification code has expired. Request a new one.');
+    throw ApiError.badRequest(
+      "Verification code has expired. Request a new one.",
+    );
   }
 
   const valid = await verifyOtp(otp, user.emailVerifyOtp);
   if (!valid) {
-    throw ApiError.badRequest('Invalid verification code.');
+    throw ApiError.badRequest("Invalid verification code.");
   }
 
   await prisma.user.update({
@@ -138,10 +192,25 @@ export async function verifyEmail(email: string, otp: string) {
 
   const [tokens, store] = await Promise.all([
     issueTokens(user.id.toString(), user.email, user.role),
-    prisma.store.findFirst({ where: { ownerId: user.id }, select: STORE_SELECT }),
+    prisma.store.findFirst({
+      where: { ownerId: user.id },
+      select: STORE_SELECT,
+    }),
   ]);
-  const { password: _, refreshToken: __, emailVerifyOtp: ___, emailVerifyOtpExpiry: ____, passwordResetOtp: _____, passwordResetOtpExpiry: ______, ...safeUser } = user;
-  return { user: { ...safeUser, isVerified: true }, store: store ?? null, ...tokens };
+  const {
+    password: _,
+    refreshToken: __,
+    emailVerifyOtp: ___,
+    emailVerifyOtpExpiry: ____,
+    passwordResetOtp: _____,
+    passwordResetOtpExpiry: ______,
+    ...safeUser
+  } = user;
+  return {
+    user: { ...safeUser, isVerified: true },
+    store: store ?? null,
+    ...tokens,
+  };
 }
 
 export async function resendVerification(email: string) {
@@ -162,7 +231,7 @@ export async function resendVerification(email: string) {
 }
 
 export async function login(input: { email: string; password: string }) {
-  const user = await prisma.user.findUnique({ 
+  const user = await prisma.user.findUnique({
     where: { email: input.email },
     select: {
       id: true,
@@ -184,24 +253,25 @@ export async function login(input: { email: string; password: string }) {
         select: STORE_SELECT,
       },
     },
-
-});
+  });
 
   if (!user) {
-    throw ApiError.unauthorized('Invalid email or password.');
+    throw ApiError.unauthorized("Invalid email or password.");
   }
 
   if (user.googleId && !user.password) {
-    throw ApiError.unauthorized('This account uses Google Sign-In. Please sign in with Google.');
+    throw ApiError.unauthorized(
+      "This account uses Google Sign-In. Please sign in with Google.",
+    );
   }
 
   if (!user.password) {
-    throw ApiError.unauthorized('Invalid email or password.');
+    throw ApiError.unauthorized("Invalid email or password.");
   }
 
   const match = await bcrypt.compare(input.password, user.password);
   if (!match) {
-    throw ApiError.unauthorized('Invalid email or password.');
+    throw ApiError.unauthorized("Invalid email or password.");
   }
 
   if (!user.isVerified) {
@@ -243,33 +313,43 @@ export async function forgotPassword(email: string) {
 }
 
 export async function verifyForgotPasswordOtp(email: string, otp: string) {
-    const user = await prisma.user.findUnique({ where: { email, passwordResetOtp: otp } });
+  const user = await prisma.user.findUnique({
+    where: { email, passwordResetOtp: otp },
+  });
 
-    if(!user) {
-        throw ApiError.badRequest('Invalid password reset OTP')
-    }
+  if (!user) {
+    throw ApiError.badRequest("Invalid password reset OTP");
+  }
 
-    if (!user.passwordResetOtpExpiry || user.passwordResetOtpExpiry < new Date()) {
-        throw ApiError.badRequest('Reset code has expired. Request a new one.');
-    }
+  if (
+    !user.passwordResetOtpExpiry ||
+    user.passwordResetOtpExpiry < new Date()
+  ) {
+    throw ApiError.badRequest("Reset code has expired. Request a new one.");
+  }
 
-    return 
-
+  return;
 }
 
-export async function resetPassword(email: string, otp: string, newPassword: string) {
+export async function resetPassword(
+  email: string,
+  otp: string,
+  newPassword: string,
+) {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || !user.passwordResetOtp || !user.passwordResetOtpExpiry) {
-    throw ApiError.badRequest('No password reset request found for this email.');
+    throw ApiError.badRequest(
+      "No password reset request found for this email.",
+    );
   }
   if (user.passwordResetOtpExpiry < new Date()) {
-    throw ApiError.badRequest('Reset code has expired. Request a new one.');
+    throw ApiError.badRequest("Reset code has expired. Request a new one.");
   }
 
   const valid = await verifyOtp(otp, user.passwordResetOtp);
   if (!valid) {
-    throw ApiError.badRequest('Invalid reset code.');
+    throw ApiError.badRequest("Invalid reset code.");
   }
 
   const hashed = await bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS);
@@ -292,19 +372,19 @@ export async function googleAuth(idToken: string) {
       audience: env.GOOGLE_CLIENT_ID,
     });
   } catch {
-    throw ApiError.unauthorized('Invalid Google token.');
+    throw ApiError.unauthorized("Invalid Google token.");
   }
 
   const payload = ticket.getPayload();
   if (!payload?.email) {
-    throw ApiError.badRequest('Google account must have a verified email.');
+    throw ApiError.badRequest("Google account must have a verified email.");
   }
 
   const {
     sub: googleId,
     email,
-    given_name: firstName = '',
-    family_name: lastName = '',
+    given_name: firstName = "",
+    family_name: lastName = "",
     picture: avatar,
   } = payload;
 
@@ -328,9 +408,20 @@ export async function googleAuth(idToken: string) {
 
   const [tokens, store] = await Promise.all([
     issueTokens(user.id.toString(), user.email, user.role),
-    prisma.store.findFirst({ where: { ownerId: user.id }, select: STORE_SELECT }),
+    prisma.store.findFirst({
+      where: { ownerId: user.id },
+      select: STORE_SELECT,
+    }),
   ]);
-  const { password: _, refreshToken: __, emailVerifyOtp: ___, emailVerifyOtpExpiry: ____, passwordResetOtp: _____, passwordResetOtpExpiry: ______, ...safeUser } = user;
+  const {
+    password: _,
+    refreshToken: __,
+    emailVerifyOtp: ___,
+    emailVerifyOtpExpiry: ____,
+    passwordResetOtp: _____,
+    passwordResetOtpExpiry: ______,
+    ...safeUser
+  } = user;
   return { user: safeUser, store: store ?? null, ...tokens };
 }
 
@@ -339,16 +430,23 @@ export async function refreshTokens(token: string) {
   try {
     payload = jwt.verify(token, env.JWT_REFRESH_SECRET) as { id: string };
   } catch {
-    throw ApiError.unauthorized('Invalid or expired refresh token.');
+    throw ApiError.unauthorized("Invalid or expired refresh token.");
   }
 
-  const user = await prisma.user.findUnique({ where: { id: BigInt(payload.id) } });
-  if (!user?.refreshToken) throw ApiError.unauthorized('Refresh token not found.');
+  const user = await prisma.user.findUnique({
+    where: { id: BigInt(payload.id) },
+  });
+  if (!user?.refreshToken)
+    throw ApiError.unauthorized("Refresh token not found.");
 
   const valid = await bcrypt.compare(token, user.refreshToken);
-  if (!valid) throw ApiError.unauthorized('Refresh token mismatch.');
+  if (!valid) throw ApiError.unauthorized("Refresh token mismatch.");
 
-  const accessToken = generateAccessToken({ id: user.id.toString(), email: user.email, role: user.role });
+  const accessToken = generateAccessToken({
+    id: user.id.toString(),
+    email: user.email,
+    role: user.role,
+  });
   const newRefreshToken = generateRefreshToken({ id: user.id.toString() });
 
   await prisma.user.update({

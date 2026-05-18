@@ -8,6 +8,11 @@ export const register = catchAsync(async (req: Request, res: Response) => {
   ApiResponse.created(res, result, result.message);
 });
 
+export const registerCustomer = catchAsync(async (req: Request, res: Response)  => {
+    const result = await authService.createCustomer(req.body);
+    ApiResponse.created(res, result, 'registration success');
+})
+
 export const verifyEmail = catchAsync(async (req: Request, res: Response) => {
   const { email, otp } = req.body;
   const result = await authService.verifyEmail(email, otp);

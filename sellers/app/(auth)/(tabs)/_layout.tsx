@@ -20,7 +20,7 @@ const _layout = () => {
                         paddingBottom: 8,
                     }
                 }}
-                >
+            >
                 <Tabs.Screen
                 name='HomeScreen' 
                 options={{
