@@ -202,4 +202,6 @@ router.patch("/:productId", authorize(Role.SELLER), validate(productSchema.parti
  */
 router.delete("/:productId", authorize(Role.SELLER), productController.deleteProduct);
 
+router.get("/popular", authorize(Role.BUYER), productController.getFeaturedProducts);
+
 export default router;

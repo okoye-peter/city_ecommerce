@@ -51,7 +51,7 @@ function RootLayoutInner() {
   if (!ready) return <SplashScreen />
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <Stack screenOptions={{ headerShown: false, contentStyle: { paddingTop: 0 } }} />
     </View>
   )

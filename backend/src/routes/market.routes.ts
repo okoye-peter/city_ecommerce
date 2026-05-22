@@ -45,4 +45,7 @@ const router = Router();
 router.get('/', authenticate, marketController.getMarkets);
 
 
+router.get('/popular', authenticate, marketController.getTopMarkets);
+
+
 export default router;

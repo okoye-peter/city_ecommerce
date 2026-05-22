@@ -8,6 +8,7 @@ import uploadRoutes from './upload.routes';
 import categoryRoutes from './category.routes';
 import productRoutes from './product.route';
 import walletRoutes from './wallet.route';
+import stateRoutes from './state.routes';
 
 
 const router = Router();
@@ -21,6 +22,7 @@ router.use('/banks', bankRoutes);
 router.use('/markets', marketRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/stores', storeRoutes);
+router.use('/states', stateRoutes);
 router.use('/users', userRoutes);
 router.use('/uploads', uploadRoutes);
 router.use('/products', productRoutes);

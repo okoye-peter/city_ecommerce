@@ -14,6 +14,7 @@ module.exports = {
         primary: "#1E1E1E",
         body: "#2C2C2C",
         light: '#F5F5F5',
+        secondary: '#757575',
       },
       fontFamily: {
         Inter: ['Inter_400Regular'],

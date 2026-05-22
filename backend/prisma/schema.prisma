@@ -57,10 +57,13 @@ model Market {
     id          BigInt   @id @default(autoincrement())
     name        String   @unique
     description String?
+    stateId     BigInt?  @map("state_id")
+    url         String?
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
     stores Store[]
+    state  State?  @relation(fields: [stateId], references: [id], onDelete: SetNull)
 
     @@map("markets")
 }
@@ -285,6 +288,17 @@ model WalletTransaction {
     orderGroup OrderGroup? @relation(fields: [orderGroupId], references: [id], onDelete: Cascade)
 
     @@map("wallet_transactions")
+}
+
+model State {
+    id        BigInt   @id @default(autoincrement())
+    name      String   @unique
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    markets Market[]
+
+    @@map("states")
 }
 
 // ─── Enums ────────────────────────────────────────────────────────────────────

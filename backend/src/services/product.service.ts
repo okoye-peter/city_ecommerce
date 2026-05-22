@@ -135,3 +135,30 @@ export const deleteProduct = async (userId: string, productId: string) => {
 
     await prisma.product.delete({ where: { id: BigInt(productId) } });
 };
+
+export const getFeatureProducts = async (stateId?: string, limit?: number) => {
+    const products = await prisma.product.findMany({
+        ...(stateId && { where: { 
+            store: {
+                market: { 
+                    stateId: BigInt(stateId as string)
+                }
+            }
+        } }),
+        select: {
+            id: true,
+            name: true,
+            price: true,
+            imageUrl: true,
+            _count: {
+                select: { orders: true }
+            }
+        },
+        orderBy: {
+            orders: {_count: 'desc'}
+        },
+        ...(limit && { take: limit }),
+    });
+    
+    return products;
+}
